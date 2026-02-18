@@ -2252,7 +2252,7 @@ async function loadLogs() {{
             </span>
           </div>
           ${{l.details?`<div style="font-size:.72rem;color:rgba(255,255,255,.4);margin-top:2px;
-            white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${{l.details}}</div>`:''}}}
+            white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${{l.details}}</div>`:''}}
           <div style="font-size:.68rem;color:rgba(255,255,255,.25)">
             ${{new Date(l.timestamp).toLocaleString()}}
           </div>
