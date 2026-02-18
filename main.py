@@ -591,9 +591,10 @@ app.add_middleware(
 
 security = HTTPBearer(auto_error=False)
 
+
 def get_current_user(
     request: Request,
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
+    credentials: Optional[HTTPAuthorizationCredentials] = None
 ) -> Optional[Dict]:
     """Try cookie → Bearer → API-Key."""
     token = None
