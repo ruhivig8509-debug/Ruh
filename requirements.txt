@@ -1,10 +1,2 @@
-fastapi
-uvicorn
-sqlalchemy
-psycopg2-binary
-bcrypt
-pyjwt
-apscheduler
-httpx
-python-multipart
-pydantic
+Flask
+gunicorn
