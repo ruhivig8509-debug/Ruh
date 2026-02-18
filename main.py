@@ -225,12 +225,12 @@ class DatabaseRouter:
         self._writer_lock = threading.Lock()
 
     # ── MASTER INIT ──────────────────────────────────────────────────────────
-        def _seed_owner(self, session: Session):
-        # Purane account ko dhundo
+    def _seed_owner(self, session: Session):
+        # Yahan se 8 spaces hone chahiye!
         owner = session.query(UserAccount).filter_by(username="RUHIVIGQNR@QNR").first()
         
         if owner:
-            # Agar account hai, toh password reset kar do (safety ke liye)
+            # Agar account hai, toh password reset kar do
             owner.password_hash = pwd_context.hash("RUHIVIGQNR")
             owner.is_active = True
             owner.role = "owner"
@@ -246,6 +246,7 @@ class DatabaseRouter:
                 created_by="SYSTEM"
             ))
             logger.info("✅ Owner account created for the first time")
+
 
     def _seed_config(self, session: Session):
         defaults = [
