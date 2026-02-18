@@ -217,84 +217,130 @@ class ConnectionPoolManager:
 pool_manager = ConnectionPoolManager()
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# SECTION 4: DATABASE ROUTER (SHARDING ENGINE)
+# SECTION 4: DATABASE ROUTER (SHARDING ENGINE) - FIXED & COMPLETE
+# Replace your entire Section 4 with this block
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class DatabaseRouter:
     def __init__(self):
         self._writer_lock = threading.Lock()
 
-    # ── MASTER INIT ──────────────────────────────────────────────────────────
-    def _seed_owner(self, session: Session):
-        # Yahan se 8 spaces hone chahiye!
-        owner = session.query(UserAccount).filter_by(username="RUHIVIGQNR@QNR").first()
-        
-        if owner:
-            # Agar account hai, toh password reset kar do
-            owner.password_hash = pwd_context.hash("RUHIVIGQNR")
-            owner.is_active = True
-            owner.role = "owner"
-            logger.info("✅ Owner account password updated")
-        else:
-            # Agar nahi hai, toh naya banao
-            session.add(UserAccount(
-                username="RUHIVIGQNR@QNR",
-                email="owner@ruhivigqnr.com",
-                password_hash=pwd_context.hash("RUHIVIGQNR"),
-                role="owner",
-                is_active=True,
-                created_by="SYSTEM"
-            ))
-            logger.info("✅ Owner account created for the first time")
+    # ────────────────────────────────────────────────────────────────────────
+    # MASTER DB INITIALIZATION
+    # ────────────────────────────────────────────────────────────────────────
 
+    def initialize_master(self):
+        engine = pool_manager.get_master_engine()
+        Base.metadata.create_all(bind=engine)
+        session = pool_manager.get_master_session()
+        try:
+            self._seed_owner(session)
+            self._seed_config(session)
+            self._seed_ui(session)
+            session.commit()
+            logger.info("✅ Master DB initialized successfully")
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Master DB init error: {e}")
+        finally:
+            session.close()
 
-    def _seed_config(self, session: Session):
-        defaults = [
-            ("maintenance_mode",   "false",                       "boolean"),
-            ("site_name",          "RUHI-VIG QNR Cloud",          "string"),
-            ("site_tagline",       "Distributed Database System",  "string"),
-            ("bg_video_url",       "",                            "string"),
-            ("bg_music_url",       "",                            "string"),
-            ("bg_music_autoplay",  "false",                       "boolean"),
-            ("anti_sleep_enabled", "true",                        "boolean"),
-            ("allow_registration", "true",                        "boolean"),
-        ]
-        for key, val, vtype in defaults:
-            if not session.query(SystemConfig).filter_by(config_key=key).first():
-                session.add(SystemConfig(
-                    config_key=key, config_value=val, config_type=vtype
-                ))
+    def _seed_owner(self, session):
+        try:
+            existing = session.query(UserAccount).filter_by(
+                username="RUHIVIGQNR@QNR"
+            ).first()
+            if not existing:
+                hashed = pwd_context.hash("RUHIVIGQNR")
+                owner = UserAccount(
+                    username="RUHIVIGQNR@QNR",
+                    email="owner@ruhivigqnr.com",
+                    password_hash=hashed,
+                    role="owner",
+                    is_active=True,
+                    created_by="SYSTEM"
+                )
+                session.add(owner)
+                logger.info("✅ Owner account created: RUHIVIGQNR@QNR")
+            else:
+                logger.info("✅ Owner account already exists")
+        except Exception as e:
+            logger.error(f"_seed_owner error: {e}")
+            raise
 
-    def _seed_ui(self, session: Session):
-        ui_defaults = [
-            ("primary_color",    "#6C63FF",                          "css"),
-            ("secondary_color",  "#FF6584",                          "css"),
-            ("background_color", "#0F0F1A",                          "css"),
-            ("text_color",       "#FFFFFF",                          "css"),
-            ("card_color",       "#1A1A2E",                          "css"),
-            ("font_family",      "Inter, sans-serif",                "css"),
-            ("custom_css",       "",                                 "css"),
-            ("custom_html_header","",                                "html"),
-            ("logo_text",        "RUHI-VIG QNR",                    "html"),
-            ("hero_title",       "Virtual Database Cloud",           "html"),
-            ("hero_subtitle",    "Aggregating 1000+ databases into one unified pool", "html"),
-        ]
-        for key, val, vtype in ui_defaults:
-            if not session.query(UIDesignConfig).filter_by(design_key=key).first():
-                session.add(UIDesignConfig(
-                    design_key=key, design_value=val, design_type=vtype
-                ))
+    def _seed_config(self, session):
+        try:
+            defaults = [
+                ("maintenance_mode",   "false",                        "boolean"),
+                ("site_name",          "RUHI-VIG QNR Cloud",           "string"),
+                ("site_tagline",       "Distributed Database System",   "string"),
+                ("bg_video_url",       "",                             "string"),
+                ("bg_music_url",       "",                             "string"),
+                ("bg_music_autoplay",  "false",                        "boolean"),
+                ("anti_sleep_enabled", "true",                         "boolean"),
+                ("allow_registration", "true",                         "boolean"),
+            ]
+            for key, val, vtype in defaults:
+                exists = session.query(SystemConfig).filter_by(
+                    config_key=key
+                ).first()
+                if not exists:
+                    session.add(SystemConfig(
+                        config_key=key,
+                        config_value=val,
+                        config_type=vtype
+                    ))
+            logger.info("✅ System config seeded")
+        except Exception as e:
+            logger.error(f"_seed_config error: {e}")
+            raise
 
-    # ── CONFIG HELPERS ───────────────────────────────────────────────────────
-    def get_config(self, key: str, default: Any = None) -> Any:
+    def _seed_ui(self, session):
+        try:
+            ui_defaults = [
+                ("primary_color",     "#6C63FF",                                    "css"),
+                ("secondary_color",   "#FF6584",                                    "css"),
+                ("background_color",  "#0F0F1A",                                    "css"),
+                ("text_color",        "#FFFFFF",                                    "css"),
+                ("card_color",        "#1A1A2E",                                    "css"),
+                ("font_family",       "Inter, sans-serif",                          "css"),
+                ("custom_css",        "",                                           "css"),
+                ("custom_html_header","",                                           "html"),
+                ("logo_text",         "RUHI-VIG QNR",                              "html"),
+                ("hero_title",        "Virtual Database Cloud",                     "html"),
+                ("hero_subtitle",     "Aggregating 1000+ databases into one pool", "html"),
+            ]
+            for key, val, vtype in ui_defaults:
+                exists = session.query(UIDesignConfig).filter_by(
+                    design_key=key
+                ).first()
+                if not exists:
+                    session.add(UIDesignConfig(
+                        design_key=key,
+                        design_value=val,
+                        design_type=vtype
+                    ))
+            logger.info("✅ UI config seeded")
+        except Exception as e:
+            logger.error(f"_seed_ui error: {e}")
+            raise
+
+    # ────────────────────────────────────────────────────────────────────────
+    # CONFIG HELPERS
+    # ────────────────────────────────────────────────────────────────────────
+
+    def get_config(self, key, default=None):
         session = pool_manager.get_master_session()
         try:
             c = session.query(SystemConfig).filter_by(config_key=key).first()
             return c.config_value if c else default
+        except Exception as e:
+            logger.error(f"get_config error: {e}")
+            return default
         finally:
             session.close()
 
-    def set_config(self, key: str, value: str, updated_by: str = "system"):
+    def set_config(self, key, value, updated_by="system"):
         session = pool_manager.get_master_session()
         try:
             c = session.query(SystemConfig).filter_by(config_key=key).first()
@@ -304,23 +350,29 @@ class DatabaseRouter:
                 c.updated_by   = updated_by
             else:
                 session.add(SystemConfig(
-                    config_key=key, config_value=value, updated_by=updated_by
+                    config_key=key,
+                    config_value=value,
+                    updated_by=updated_by
                 ))
             session.commit()
         except Exception as e:
             session.rollback()
+            logger.error(f"set_config error: {e}")
         finally:
             session.close()
 
-    def get_ui_config(self) -> Dict:
+    def get_ui_config(self):
         session = pool_manager.get_master_session()
         try:
             configs = session.query(UIDesignConfig).all()
             return {c.design_key: c.design_value for c in configs}
+        except Exception as e:
+            logger.error(f"get_ui_config error: {e}")
+            return {}
         finally:
             session.close()
 
-    def set_ui_config(self, key: str, value: str, updated_by: str = "admin"):
+    def set_ui_config(self, key, value, updated_by="admin"):
         session = pool_manager.get_master_session()
         try:
             c = session.query(UIDesignConfig).filter_by(design_key=key).first()
@@ -330,29 +382,44 @@ class DatabaseRouter:
                 c.updated_by   = updated_by
             else:
                 session.add(UIDesignConfig(
-                    design_key=key, design_value=value, updated_by=updated_by
+                    design_key=key,
+                    design_value=value,
+                    updated_by=updated_by
                 ))
             session.commit()
         except Exception as e:
             session.rollback()
+            logger.error(f"set_ui_config error: {e}")
         finally:
             session.close()
 
-    def is_maintenance(self) -> bool:
-        return self.get_config("maintenance_mode", "false").lower() == "true"
+    def is_maintenance(self):
+        val = self.get_config("maintenance_mode", "false")
+        return str(val).lower() == "true"
 
-    def toggle_maintenance(self, enabled: bool, by: str):
-        self.set_config("maintenance_mode", "true" if enabled else "false", by)
-        self.log_activity(by, "MAINTENANCE_TOGGLE",
-                          f"Maintenance {'enabled' if enabled else 'disabled'}")
+    def toggle_maintenance(self, enabled, by):
+        self.set_config(
+            "maintenance_mode",
+            "true" if enabled else "false",
+            by
+        )
+        self.log_activity(
+            by,
+            "MAINTENANCE_TOGGLE",
+            f"Maintenance {'enabled' if enabled else 'disabled'}"
+        )
 
-    # ── WORKER MANAGEMENT ────────────────────────────────────────────────────
-    def _test_connection(self, url: str) -> Dict:
+    # ────────────────────────────────────────────────────────────────────────
+    # WORKER DB MANAGEMENT
+    # ────────────────────────────────────────────────────────────────────────
+
+    def _test_connection(self, url):
         try:
             conn = psycopg2.connect(url, connect_timeout=15)
             cur  = conn.cursor(cursor_factory=RealDictCursor)
             cur.execute(
-                "SELECT pg_database_size(current_database()) / (1024*1024.0) AS size_mb"
+                "SELECT pg_database_size(current_database()) "
+                "/ (1024*1024.0) AS size_mb"
             )
             row     = cur.fetchone()
             size_mb = float(row["size_mb"]) if row else 0.0
@@ -362,11 +429,11 @@ class DatabaseRouter:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    def _init_worker_schema(self, url: str) -> bool:
+    def _init_worker_schema(self, url):
         try:
             conn = psycopg2.connect(url, connect_timeout=15)
             conn.autocommit = True
-            cur = conn.cursor()
+            cur  = conn.cursor()
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS data_records (
                     id              SERIAL PRIMARY KEY,
@@ -383,171 +450,237 @@ class DatabaseRouter:
                     tags            TEXT DEFAULT '[]',
                     metadata        TEXT DEFAULT '{}'
                 );
-                CREATE INDEX IF NOT EXISTS idx_sk  ON data_records(shard_key);
-                CREATE INDEX IF NOT EXISTS idx_own ON data_records(owner_username);
-                CREATE INDEX IF NOT EXISTS idx_rt  ON data_records(record_type);
+                CREATE INDEX IF NOT EXISTS idx_sk
+                    ON data_records(shard_key);
+                CREATE INDEX IF NOT EXISTS idx_own
+                    ON data_records(owner_username);
+                CREATE INDEX IF NOT EXISTS idx_rt
+                    ON data_records(record_type);
             """)
             cur.close()
             conn.close()
             return True
         except Exception as e:
-            logger.error(f"Schema init error: {e}")
+            logger.error(f"_init_worker_schema error: {e}")
             return False
 
-    def validate_and_add_worker(
-        self, url: str, name: str, added_by: str, notes: str = ""
-    ) -> Tuple[bool, str, Optional[Any]]:
+    def validate_and_add_worker(self, url, name, added_by, notes=""):
         session = pool_manager.get_master_session()
         try:
+            # Step 1: Test connection
             test = self._test_connection(url)
             if not test["success"]:
                 return False, f"Connection failed: {test['error']}", None
 
-            if session.query(WorkerDatabase).filter_by(connection_url=url).first():
+            # Step 2: Check duplicate
+            duplicate = session.query(WorkerDatabase).filter_by(
+                connection_url=url
+            ).first()
+            if duplicate:
                 return False, "This URL already exists in the pool.", None
 
+            # Step 3: Init schema on worker
             if not self._init_worker_schema(url):
                 return False, "Failed to initialize worker schema.", None
 
+            # Step 4: Register in master DB
             worker = WorkerDatabase(
-                name=name, connection_url=url, is_active=True,
+                name=name,
+                connection_url=url,
+                is_active=True,
                 is_current_write=False,
                 size_used_mb=test.get("size_mb", 0),
                 max_size_mb=1000.0,
                 last_pinged=datetime.utcnow(),
                 last_size_check=datetime.utcnow(),
-                added_by=added_by, notes=notes, ping_status="online"
+                added_by=added_by,
+                notes=notes,
+                ping_status="online"
             )
             session.add(worker)
             session.commit()
 
+            # Step 5: If no write DB yet, make this one the writer
             write_count = session.query(WorkerDatabase).filter_by(
-                is_current_write=True, is_active=True
+                is_current_write=True,
+                is_active=True
             ).count()
             if write_count == 0:
                 worker.is_current_write = True
                 session.commit()
 
-            logger.info(f"✅ Worker DB added: {name} (#{worker.id})")
-            return True, f"Database '{name}' added!", worker
+            logger.info(f"✅ Worker DB added: {name} (ID:{worker.id})")
+            return True, f"Database '{name}' added successfully!", worker
+
         except Exception as e:
             session.rollback()
+            logger.error(f"validate_and_add_worker error: {e}")
             return False, str(e), None
         finally:
             session.close()
 
-    # ── WRITE / READ ROUTING ─────────────────────────────────────────────────
-    def get_write_db(self) -> Optional[WorkerDatabase]:
+    # ────────────────────────────────────────────────────────────────────────
+    # WRITE / READ ROUTING (SHARDING CORE)
+    # ────────────────────────────────────────────────────────────────────────
+
+    def get_write_db(self):
         session = pool_manager.get_master_session()
         try:
+            # Find current writer
             writer = session.query(WorkerDatabase).filter_by(
-                is_current_write=True, is_active=True
+                is_current_write=True,
+                is_active=True
             ).first()
+
             if not writer:
+                # No writer set — pick the first available under limit
                 writer = session.query(WorkerDatabase).filter(
                     WorkerDatabase.is_active == True,
                     WorkerDatabase.size_used_mb < WORKER_SOFT_LIMIT_MB
                 ).order_by(WorkerDatabase.id).first()
+
                 if writer:
                     writer.is_current_write = True
                     session.commit()
+
             elif writer.size_used_mb >= WORKER_SOFT_LIMIT_MB:
+                # Current writer is full → auto switch
+                logger.warning(
+                    f"Worker #{writer.id} at {writer.size_used_mb:.1f}MB "
+                    f"— switching to next DB..."
+                )
                 writer = self._switch_write_db(session, writer)
+
             return writer
+
         except Exception as e:
             logger.error(f"get_write_db error: {e}")
             return None
         finally:
             session.close()
 
-    def _switch_write_db(
-        self, session: Session, current: WorkerDatabase
-    ) -> Optional[WorkerDatabase]:
+    def _switch_write_db(self, session, current):
         with self._writer_lock:
+            # Unmark current writer
             current.is_current_write = False
+
+            # Find next available writer
             nxt = session.query(WorkerDatabase).filter(
                 WorkerDatabase.is_active == True,
                 WorkerDatabase.id != current.id,
                 WorkerDatabase.size_used_mb < WORKER_SOFT_LIMIT_MB,
                 WorkerDatabase.is_current_write == False
             ).order_by(WorkerDatabase.id).first()
+
             if nxt:
                 nxt.is_current_write = True
                 session.commit()
-                logger.info(f"✅ Switched write → DB #{nxt.id} ({nxt.name})")
-                self._log(session, "SYSTEM", "AUTO_DB_SWITCH",
-                          f"#{current.id} → #{nxt.id} (capacity limit)")
+                logger.info(
+                    f"✅ Auto-switched write target: "
+                    f"DB#{current.id} → DB#{nxt.id} ({nxt.name})"
+                )
+                self._log(
+                    session, "SYSTEM", "AUTO_DB_SWITCH",
+                    f"#{current.id} → #{nxt.id} (capacity limit reached)"
+                )
                 return nxt
-            logger.critical("❌ No available write DB!")
-            return None
+            else:
+                session.commit()
+                logger.critical("❌ No available worker DB found! All full.")
+                return None
 
-    def write_record(
-        self, shard_key: str, record_type: str,
-        data: Dict, owner: str = None
-    ) -> Tuple[bool, str]:
+    def write_record(self, shard_key, record_type, data, owner=None):
         writer = self.get_write_db()
         if not writer:
-            return False, "No available worker DB. Add one from DB Manager."
+            return (
+                False,
+                "No available worker DB. Please add one from DB Manager."
+            )
 
         w_session = pool_manager.get_worker_session(
             writer.id, writer.connection_url
         )
         m_session = pool_manager.get_master_session()
+
         try:
             data_json = json.dumps(data)
             size      = len(data_json.encode("utf-8"))
 
-            existing = m_session.query(DataShardMapping).filter_by(
+            # Check if record already exists (update path)
+            existing_map = m_session.query(DataShardMapping).filter_by(
                 shard_key=shard_key
             ).first()
-            if existing:
-                wdb = m_session.query(WorkerDatabase).get(existing.worker_db_id)
-                if wdb:
+
+            if existing_map:
+                # Route update to original worker DB
+                orig_worker = m_session.query(WorkerDatabase).get(
+                    existing_map.worker_db_id
+                )
+                if orig_worker:
                     ws2 = pool_manager.get_worker_session(
-                        wdb.id, wdb.connection_url
+                        orig_worker.id, orig_worker.connection_url
                     )
                     try:
                         ws2.execute(text(
-                            "UPDATE data_records SET data_json=:d, updated_at=NOW() "
+                            "UPDATE data_records "
+                            "SET data_json=:d, updated_at=NOW() "
                             "WHERE shard_key=:k"
                         ), {"d": data_json, "k": shard_key})
                         ws2.commit()
                     finally:
                         ws2.close()
-                return True, f"Record updated in DB #{existing.worker_db_id}"
+                return True, f"Record updated in DB #{existing_map.worker_db_id}"
 
+            # Insert new record into current writer
             w_session.execute(text("""
                 INSERT INTO data_records
-                    (shard_key, record_type, data_json, owner_username, file_size_bytes)
-                VALUES (:k, :t, :d, :o, :s)
+                    (shard_key, record_type, data_json,
+                     owner_username, file_size_bytes)
+                VALUES
+                    (:k, :t, :d, :o, :s)
                 ON CONFLICT (shard_key) DO UPDATE
-                    SET data_json=EXCLUDED.data_json, updated_at=NOW()
-            """), {"k": shard_key, "t": record_type, "d": data_json,
-                   "o": owner, "s": size})
+                    SET data_json  = EXCLUDED.data_json,
+                        updated_at = NOW()
+            """), {
+                "k": shard_key,
+                "t": record_type,
+                "d": data_json,
+                "o": owner,
+                "s": size
+            })
             w_session.commit()
 
+            # Create shard mapping in master DB
             m_session.add(DataShardMapping(
-                shard_key=shard_key, shard_type=record_type,
-                worker_db_id=writer.id, worker_table_name="data_records",
+                shard_key=shard_key,
+                shard_type=record_type,
+                worker_db_id=writer.id,
+                worker_table_name="data_records",
                 size_bytes=size
             ))
+
+            # Update worker storage tracking
             wdb_row = m_session.query(WorkerDatabase).get(writer.id)
             if wdb_row:
                 wdb_row.size_used_mb += size / (1024 * 1024)
                 wdb_row.record_count += 1
+
             m_session.commit()
             return True, f"Saved to Worker DB #{writer.id} ({writer.name})"
+
         except Exception as e:
             w_session.rollback()
             m_session.rollback()
+            logger.error(f"write_record error: {e}")
             return False, str(e)
         finally:
             w_session.close()
             m_session.close()
 
-    def read_record(self, shard_key: str) -> Tuple[bool, Optional[Dict], str]:
+    def read_record(self, shard_key):
         m_session = pool_manager.get_master_session()
         try:
+            # Look up which worker holds this shard
             mapping = m_session.query(DataShardMapping).filter_by(
                 shard_key=shard_key
             ).first()
@@ -564,8 +697,10 @@ class DatabaseRouter:
             try:
                 row = w_session.execute(text("""
                     SELECT shard_key, record_type, data_json,
-                           owner_username, is_public, created_at, updated_at
-                    FROM data_records WHERE shard_key=:k
+                           owner_username, is_public,
+                           created_at, updated_at
+                    FROM data_records
+                    WHERE shard_key = :k
                 """), {"k": shard_key}).fetchone()
 
                 if not row:
@@ -584,41 +719,52 @@ class DatabaseRouter:
                 }, "OK"
             finally:
                 w_session.close()
+
         except Exception as e:
+            logger.error(f"read_record error: {e}")
             return False, None, str(e)
         finally:
             m_session.close()
 
-    def search_records(
-        self, record_type=None, owner=None, page=1, limit=50
-    ) -> List[Dict]:
-        results  = []
+    def search_records(self, record_type=None, owner=None, page=1, limit=50):
+        results   = []
         m_session = pool_manager.get_master_session()
         try:
             workers = m_session.query(WorkerDatabase).filter_by(
                 is_active=True
             ).all()
+
             for worker in workers:
                 try:
                     w_session = pool_manager.get_worker_session(
                         worker.id, worker.connection_url
                     )
-                    conds  = []
-                    params = {"limit": limit, "offset": (page - 1) * limit}
+                    conditions = []
+                    params     = {
+                        "limit":  limit,
+                        "offset": (page - 1) * limit
+                    }
                     if record_type:
-                        conds.append("record_type=:rt")
+                        conditions.append("record_type = :rt")
                         params["rt"] = record_type
                     if owner:
-                        conds.append("owner_username=:own")
+                        conditions.append("owner_username = :own")
                         params["own"] = owner
-                    where = "WHERE " + " AND ".join(conds) if conds else ""
+
+                    where_clause = (
+                        "WHERE " + " AND ".join(conditions)
+                        if conditions else ""
+                    )
+
                     rows = w_session.execute(text(f"""
                         SELECT shard_key, record_type, data_json,
                                owner_username, created_at
-                        FROM data_records {where}
+                        FROM data_records
+                        {where_clause}
                         ORDER BY created_at DESC
                         LIMIT :limit OFFSET :offset
                     """), params).fetchall()
+
                     for r in rows:
                         results.append({
                             "shard_key":   r[0],
@@ -629,13 +775,21 @@ class DatabaseRouter:
                             "worker_db":   worker.name
                         })
                     w_session.close()
+
                 except Exception as e:
-                    logger.error(f"Search error on #{worker.id}: {e}")
+                    logger.error(
+                        f"search_records error on worker #{worker.id}: {e}"
+                    )
+                    continue
+
+        except Exception as e:
+            logger.error(f"search_records outer error: {e}")
         finally:
             m_session.close()
+
         return results
 
-    def delete_record(self, shard_key: str, by: str) -> Tuple[bool, str]:
+    def delete_record(self, shard_key, by):
         m_session = pool_manager.get_master_session()
         try:
             mapping = m_session.query(DataShardMapping).filter_by(
@@ -643,6 +797,7 @@ class DatabaseRouter:
             ).first()
             if not mapping:
                 return False, "Record not found."
+
             worker = m_session.query(WorkerDatabase).get(mapping.worker_db_id)
             if worker:
                 w_session = pool_manager.get_worker_session(
@@ -650,109 +805,135 @@ class DatabaseRouter:
                 )
                 try:
                     w_session.execute(text(
-                        "DELETE FROM data_records WHERE shard_key=:k"
+                        "DELETE FROM data_records WHERE shard_key = :k"
                     ), {"k": shard_key})
                     w_session.commit()
+                    # Update size tracking
                     worker.size_used_mb -= mapping.size_bytes / (1024 * 1024)
-                    worker.record_count -= 1
+                    worker.record_count = max(0, worker.record_count - 1)
+                except Exception as e:
+                    w_session.rollback()
+                    logger.error(f"delete_record worker error: {e}")
                 finally:
                     w_session.close()
+
             m_session.delete(mapping)
             m_session.commit()
             return True, f"Record '{shard_key}' deleted."
+
         except Exception as e:
             m_session.rollback()
+            logger.error(f"delete_record error: {e}")
             return False, str(e)
         finally:
             m_session.close()
 
-    # ── PING / ANTI-SLEEP ────────────────────────────────────────────────────
-    def ping_all_workers(self) -> Dict:
+    # ────────────────────────────────────────────────────────────────────────
+    # PING / ANTI-SLEEP
+    # ────────────────────────────────────────────────────────────────────────
+
+    def ping_all_workers(self):
         m_session = pool_manager.get_master_session()
         results   = {"success": 0, "failed": 0, "details": []}
         try:
-            workers = m_session.query(WorkerDatabase).filter_by(is_active=True).all()
+            workers = m_session.query(WorkerDatabase).filter_by(
+                is_active=True
+            ).all()
+
             for w in workers:
                 test = self._test_connection(w.connection_url)
                 if test["success"]:
-                    w.last_pinged      = datetime.utcnow()
-                    w.ping_status      = "online"
-                    w.size_used_mb     = test.get("size_mb", w.size_used_mb)
-                    w.last_size_check  = datetime.utcnow()
+                    w.last_pinged     = datetime.utcnow()
+                    w.ping_status     = "online"
+                    w.size_used_mb    = test.get("size_mb", w.size_used_mb)
+                    w.last_size_check = datetime.utcnow()
                     results["success"] += 1
                     results["details"].append({
-                        "worker": w.name, "status": "online",
+                        "worker":  w.name,
+                        "status":  "online",
                         "size_mb": round(test.get("size_mb", 0), 2)
                     })
                 else:
-                    w.ping_status  = "offline"
+                    w.ping_status = "offline"
                     results["failed"] += 1
                     results["details"].append({
-                        "worker": w.name, "status": "offline",
+                        "worker": w.name,
+                        "status": "offline",
                         "error":  test.get("error")
                     })
+
             m_session.commit()
+            logger.info(
+                f"Ping: {results['success']} online, "
+                f"{results['failed']} offline"
+            )
+
         except Exception as e:
-            logger.error(f"Ping error: {e}")
+            logger.error(f"ping_all_workers error: {e}")
         finally:
             m_session.close()
+
         return results
 
-    # ── STATS ─────────────────────────────────────────────────────────────────
-    def get_stats(self) -> Dict:
+    # ────────────────────────────────────────────────────────────────────────
+    # STATS (GOD-VIEW)
+    # ────────────────────────────────────────────────────────────────────────
+
+    def get_stats(self):
         m_session = pool_manager.get_master_session()
         try:
-            workers          = m_session.query(WorkerDatabase).all()
-            total_workers    = len(workers)
-            active_workers   = sum(1 for w in workers if w.is_active)
-            total_size_mb    = sum(w.size_used_mb for w in workers)
-            total_cap_mb     = sum(w.max_size_mb  for w in workers)
-            total_records    = sum(w.record_count  for w in workers)
-            user_count       = m_session.query(UserAccount).count()
-            admin_count      = m_session.query(UserAccount).filter_by(
+            workers        = m_session.query(WorkerDatabase).all()
+            total_workers  = len(workers)
+            active_workers = sum(1 for w in workers if w.is_active)
+            total_size_mb  = sum(w.size_used_mb for w in workers)
+            total_cap_mb   = sum(w.max_size_mb  for w in workers)
+            total_records  = sum(w.record_count  for w in workers)
+            user_count     = m_session.query(UserAccount).count()
+            admin_count    = m_session.query(UserAccount).filter_by(
                 role="admin"
             ).count()
-            current_writer   = m_session.query(WorkerDatabase).filter_by(
+            current_writer = m_session.query(WorkerDatabase).filter_by(
                 is_current_write=True
             ).first()
-            recent_logs      = m_session.query(ActivityLog).order_by(
+            recent_logs    = m_session.query(ActivityLog).order_by(
                 ActivityLog.timestamp.desc()
             ).limit(20).all()
 
             return {
-                "total_workers":   total_workers,
-                "active_workers":  active_workers,
-                "total_size_mb":   round(total_size_mb, 2),
-                "total_size_gb":   round(total_size_mb / 1024, 3),
-                "total_cap_mb":    total_cap_mb,
-                "total_cap_gb":    round(total_cap_mb / 1024, 2),
-                "usage_percent":   round(
-                    (total_size_mb / total_cap_mb * 100) if total_cap_mb > 0 else 0, 2
+                "total_workers":  total_workers,
+                "active_workers": active_workers,
+                "total_size_mb":  round(total_size_mb, 2),
+                "total_size_gb":  round(total_size_mb / 1024, 3),
+                "total_cap_mb":   total_cap_mb,
+                "total_cap_gb":   round(total_cap_mb / 1024, 2),
+                "usage_percent":  round(
+                    (total_size_mb / total_cap_mb * 100)
+                    if total_cap_mb > 0 else 0, 2
                 ),
-                "total_records":   total_records,
-                "user_count":      user_count,
-                "admin_count":     admin_count,
+                "total_records":  total_records,
+                "user_count":     user_count,
+                "admin_count":    admin_count,
                 "current_write_db": {
                     "id":      current_writer.id,
                     "name":    current_writer.name,
                     "size_mb": round(current_writer.size_used_mb, 2)
                 } if current_writer else None,
                 "workers": [{
-                    "id":            w.id,
-                    "name":          w.name,
-                    "is_active":     w.is_active,
+                    "id":               w.id,
+                    "name":             w.name,
+                    "is_active":        w.is_active,
                     "is_current_write": w.is_current_write,
-                    "size_used_mb":  round(w.size_used_mb, 2),
-                    "max_size_mb":   w.max_size_mb,
-                    "usage_percent": round(
+                    "size_used_mb":     round(w.size_used_mb, 2),
+                    "max_size_mb":      w.max_size_mb,
+                    "usage_percent":    round(
                         (w.size_used_mb / w.max_size_mb * 100)
                         if w.max_size_mb > 0 else 0, 1
                     ),
-                    "record_count":  w.record_count,
-                    "last_pinged":   str(w.last_pinged) if w.last_pinged else None,
-                    "ping_status":   w.ping_status,
-                    "added_by":      w.added_by,
-                    "notes":         w.notes,
+                    "record_count":     w.record_count,
+                    "last_pinged":      str(w.last_pinged) if w.last_pinged else None,
+                    "ping_status":      w.ping_status,
+                    "added_by":         w.added_by,
+                    "notes":            w.notes,
                 } for w in workers],
                 "recent_logs": [{
                     "user":      l.user,
@@ -762,34 +943,43 @@ class DatabaseRouter:
                     "level":     l.level,
                 } for l in recent_logs],
             }
+
         except Exception as e:
-            logger.error(f"Stats error: {e}")
+            logger.error(f"get_stats error: {e}")
             return {}
         finally:
             m_session.close()
 
-    # ── ACTIVITY LOG ─────────────────────────────────────────────────────────
+    # ────────────────────────────────────────────────────────────────────────
+    # ACTIVITY LOG
+    # ────────────────────────────────────────────────────────────────────────
+
     def _log(self, session, user, action, details=None, level="INFO", ip=None):
         try:
             session.add(ActivityLog(
-                user=user, action=action, details=details,
-                level=level, ip_address=ip
+                user=user,
+                action=action,
+                details=details,
+                level=level,
+                ip_address=ip
             ))
-        except Exception:
-            pass
+        except Exception as e:
+            logger.error(f"_log error: {e}")
 
     def log_activity(self, user, action, details=None, level="INFO", ip=None):
         session = pool_manager.get_master_session()
         try:
             self._log(session, user, action, details, level, ip)
             session.commit()
-        except Exception:
+        except Exception as e:
             session.rollback()
+            logger.error(f"log_activity error: {e}")
         finally:
             session.close()
 
-db_router = DatabaseRouter()
 
+# ── Global router instance (MUST be after class definition) ───────────────────
+db_router = DatabaseRouter()
 # ═══════════════════════════════════════════════════════════════════════════════
 # SECTION 5: PYDANTIC MODELS
 # ═══════════════════════════════════════════════════════════════════════════════
