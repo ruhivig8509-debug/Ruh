@@ -279,6 +279,13 @@ def init_master_db():
     """Create all master tables and seed owner + defaults."""
     try:
         engine = get_master_engine()
+        
+        # ── FORCE RE-INIT Broken Table ──
+        with engine.connect() as conn:
+            # Purani table drop kar rahe hain taaki naye column (key) ke sath ban sake
+            conn.execute(text("DROP TABLE IF EXISTS system_config CASCADE"))
+            conn.commit()
+            
         MasterBase.metadata.create_all(engine)
         log.info("Master DB tables created/verified.")
 
@@ -3050,8 +3057,7 @@ def get_user_theme(user: dict) -> str:
 # ════════════════════════════════════════════════════════════
 
 @app.get("/", response_class=HTMLResponse)
-async def root(request: Request):
-    user = get_current_user(request)
+async def root(request: Request, user = Depends(get_current_user)):
     if user:
         return RedirectResponse("/dashboard")
     return RedirectResponse("/login")
