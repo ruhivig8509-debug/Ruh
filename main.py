@@ -1,2342 +1,1709 @@
 # main.py
 from flask import Flask, render_template_string, request, jsonify, session, redirect, url_for
-import json
-import os
-import hashlib
+import json, os, hashlib
 from functools import wraps
 
 app = Flask(__name__)
-app.secret_key = 'ruhi_qnr_secret_key_2024_ultra_secure'
-
-# ============================================================
-# DATABASE MANAGEMENT (JSON-based)
-# ============================================================
+app.secret_key = 'ruhi_qnr_ultra_girly_secret_2024'
 
 DB_FILE = 'database.json'
 
 DEFAULT_DB = {
     "password": hashlib.sha256("admin123".encode()).hexdigest(),
     "profile": {
-        "name": "RUHI X QNR",
-        "tagline": "Digital Ghost | Aesthetic Soul",
-        "bio": "A mystery wrapped in pink code. Living between two worlds — the dark web of thoughts and the pastel dreams of reality.",
-        "age": "19",
-        "birthday": "January 1st",
-        "location": "Lost in the Digital Void",
-        "zodiac": "Capricorn ♑",
-        "hobbies": "Hacking Hearts & Aesthetic Edits",
-        "music": "Lo-fi & Dark Pop",
-        "vibe": "Chaotic Soft Girl",
-        "quote": "\"She was a glitch in the matrix, too beautiful to be an error.\"",
-        "avatar": "https://i.pinimg.com/736x/8b/16/7a/8b167af653c2399dd93b952a48740620.jpg"
+        "name": "RUHI",
+        "subtitle": "& QNR",
+        "tagline": "She's the storm they never saw coming 🌸",
+        "bio": "A girl made of moonlight, roses & chaos. Too pretty to be understood, too wild to be tamed. Living in her own pink universe where rules don't exist. 💕",
+        "age": "19 ✨",
+        "birthday": "🎂 January 1st",
+        "location": "📍 In Your Heart",
+        "zodiac": "♑ Capricorn Queen",
+        "hobbies": "🎨 Art, Music & Dreaming",
+        "music": "🎵 Dark Pop & Lo-fi",
+        "vibe": "🌙 Chaotic Soft Girl",
+        "bestie": "💗 QNR is My Person",
+        "quote": "She needed a hero, so she became one. 🦋",
+        "avatar": "https://i.pinimg.com/736x/8b/16/7a/8b167af653c2399dd93b952a48740620.jpg",
+        "avatar2": ""
     },
+    "background_video": "",
+    "background_music": "",
     "socials": {
         "instagram": "https://instagram.com",
         "twitter": "https://twitter.com",
         "tiktok": "https://tiktok.com",
         "youtube": "https://youtube.com",
-        "spotify": "https://spotify.com"
+        "snapchat": "https://snapchat.com"
     },
-    "background_music": "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
     "media_map": {
-        "age": "",
-        "birthday": "",
-        "location": "",
-        "zodiac": "",
-        "hobbies": "",
-        "music": "",
-        "vibe": "",
-        "quote": ""
+        "age": "", "birthday": "", "location": "",
+        "zodiac": "", "hobbies": "", "music": "",
+        "vibe": "", "bestie": "", "quote": ""
     },
-    "terminal_lines": [
-        "Initializing secure connection...",
-        "Bypassing Firewalls... [████████████] 100%",
-        "Decrypting encrypted data packets...",
-        "Accessing RUHI X QNR Database...",
-        "Loading personality matrix...",
-        "Aesthetic core: ONLINE",
-        "Chaos module: ACTIVE",
-        "Welcome, User. Proceed with caution. 💕"
+    "intro_lines": [
+        "Loading her universe... 🌸",
+        "Sprinkling pink magic... ✨",
+        "Waking up the butterflies... 🦋",
+        "Pouring love & chaos... 💕",
+        "She's almost ready... 💗",
+        "Welcome to her world. 🌙"
     ]
 }
 
 def load_db():
     if not os.path.exists(DB_FILE):
-        save_db(DEFAULT_DB)
-        return DEFAULT_DB
+        save_db(DEFAULT_DB); return DEFAULT_DB
     try:
         with open(DB_FILE, 'r') as f:
             data = json.load(f)
-            # Merge with defaults to ensure all keys exist
-            for key in DEFAULT_DB:
-                if key not in data:
-                    data[key] = DEFAULT_DB[key]
-            if 'media_map' not in data:
-                data['media_map'] = DEFAULT_DB['media_map']
-            return data
-    except:
-        return DEFAULT_DB
+        for k in DEFAULT_DB:
+            if k not in data: data[k] = DEFAULT_DB[k]
+        if 'media_map' not in data: data['media_map'] = DEFAULT_DB['media_map']
+        if 'bestie' not in data.get('media_map', {}): data['media_map']['bestie'] = ''
+        if 'bestie' not in data.get('profile', {}): data['profile']['bestie'] = DEFAULT_DB['profile']['bestie']
+        if 'subtitle' not in data.get('profile', {}): data['profile']['subtitle'] = DEFAULT_DB['profile']['subtitle']
+        if 'avatar2' not in data.get('profile', {}): data['profile']['avatar2'] = ''
+        if 'background_video' not in data: data['background_video'] = ''
+        return data
+    except: return DEFAULT_DB
 
 def save_db(data):
-    with open(DB_FILE, 'w') as f:
-        json.dump(data, f, indent=2)
+    with open(DB_FILE, 'w') as f: json.dump(data, f, indent=2)
 
 def login_required(f):
     @wraps(f)
-    def decorated(*args, **kwargs):
-        if not session.get('admin_logged_in'):
-            return redirect(url_for('admin_login'))
-        return f(*args, **kwargs)
-    return decorated
+    def dec(*a, **k):
+        if not session.get('admin'): return redirect('/admin/login')
+        return f(*a, **k)
+    return dec
 
-# ============================================================
-# MAIN TEMPLATE
-# ============================================================
-
-MAIN_TEMPLATE = """
-<!DOCTYPE html>
+# ══════════════════════════════════════════════
+#  MAIN TEMPLATE — GOD LEVEL
+# ══════════════════════════════════════════════
+MAIN = r"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ profile.name }} | Digital Identity</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>{{ p.name }} {{ p.subtitle }} 🌸</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,600&family=Dancing+Script:wght@400;600;700&family=Poppins:wght@200;300;400;500;600;700&family=Montserrat:wght@100;200;300;400;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-/* ==================== RESET & BASE ==================== */
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-:root {
-  --pink-primary: #ff6eb4;
-  --pink-secondary: #ff9ed2;
-  --pink-light: #ffd6ec;
-  --pink-dark: #c2185b;
-  --purple: #9c27b0;
-  --cyan: #00ffff;
-  --green: #00ff41;
-  --dark: #0a0a0a;
-  --glass: rgba(255,255,255,0.08);
-  --glass-border: rgba(255,182,193,0.3);
+:root{
+  --pk:#ff4d8d;--pk2:#ff85b3;--pk3:#ffc2d9;--pk4:#fff0f5;
+  --pp:#b94fcc;--pp2:#d17fe8;--pp3:#f0c6ff;
+  --rd:#e8305a;--rd2:#ff6b8a;
+  --gold:#ffd700;--gold2:#ffec7a;
+  --dark:#1a0020;--dark2:#2d0035;--dark3:#0d0015;
+  --glass:rgba(255,255,255,0.07);
+  --glass2:rgba(255,255,255,0.12);
+  --border:rgba(255,130,180,0.25);
+  --shadow:rgba(255,77,141,0.4);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  width:100%;min-height:100vh;
+  background:var(--dark3);
+  font-family:'Poppins',sans-serif;
+  overflow-x:hidden;
+  cursor:none;
 }
 
-html, body {
-  width: 100%; height: 100%;
-  overflow: hidden;
-  background: #000;
-  font-family: 'Orbitron', monospace;
-  cursor: crosshair;
+/* ── CUSTOM CURSOR ── */
+#cursor{
+  position:fixed;width:12px;height:12px;
+  background:var(--pk);border-radius:50%;
+  pointer-events:none;z-index:99999;
+  transform:translate(-50%,-50%);
+  transition:width .2s,height .2s,background .2s;
+  box-shadow:0 0 20px var(--pk),0 0 40px var(--pk2);
+}
+#cursor-ring{
+  position:fixed;width:36px;height:36px;
+  border:2px solid rgba(255,130,180,0.5);
+  border-radius:50%;pointer-events:none;z-index:99998;
+  transform:translate(-50%,-50%);
+  transition:all .12s ease-out;
+}
+body:has(.bio-card:hover) #cursor{width:30px;height:30px;background:var(--pp);}
+
+/* ── CURSOR TRAIL ── */
+.trail{
+  position:fixed;border-radius:50%;pointer-events:none;
+  z-index:99990;transform:translate(-50%,-50%);
+  animation:trailFade .8s forwards;
+}
+@keyframes trailFade{
+  0%{opacity:.8;transform:translate(-50%,-50%) scale(1);}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(0);}
 }
 
-/* ==================== PHASE 1: GLITCH SCREEN ==================== */
-#phase-glitch {
-  position: fixed; inset: 0;
-  background: #000;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: glitchPhaseOut 0.5s 3s forwards;
+/* ══ LOADING SCREEN ══ */
+#loader{
+  position:fixed;inset:0;z-index:9000;
+  background:var(--dark3);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:30px;
 }
-
-.glitch-overlay {
-  position: absolute; inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0,255,65,0.03) 2px,
-    rgba(0,255,65,0.03) 4px
-  );
-  animation: scanlines 0.1s linear infinite;
-  pointer-events: none;
+.loader-petals{
+  position:relative;width:120px;height:120px;
 }
-
-.glitch-bars {
-  position: absolute; inset: 0;
-  overflow: hidden;
+.loader-petal{
+  position:absolute;top:50%;left:50%;
+  width:16px;height:40px;
+  background:linear-gradient(to bottom,var(--pk),var(--pp));
+  border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
+  transform-origin:8px 60px;
+  animation:petalSpin 1.5s ease-in-out infinite;
+  box-shadow:0 0 10px var(--pk);
 }
-
-.glitch-bar {
-  position: absolute;
-  left: 0; right: 0;
-  background: rgba(0,255,65,0.15);
-  animation: glitchBar 0.3s ease infinite;
+.loader-petal:nth-child(1){transform:rotate(0deg) translateY(-60px);animation-delay:0s;}
+.loader-petal:nth-child(2){transform:rotate(45deg) translateY(-60px);animation-delay:.1s;}
+.loader-petal:nth-child(3){transform:rotate(90deg) translateY(-60px);animation-delay:.2s;}
+.loader-petal:nth-child(4){transform:rotate(135deg) translateY(-60px);animation-delay:.3s;}
+.loader-petal:nth-child(5){transform:rotate(180deg) translateY(-60px);animation-delay:.4s;}
+.loader-petal:nth-child(6){transform:rotate(225deg) translateY(-60px);animation-delay:.5s;}
+.loader-petal:nth-child(7){transform:rotate(270deg) translateY(-60px);animation-delay:.6s;}
+.loader-petal:nth-child(8){transform:rotate(315deg) translateY(-60px);animation-delay:.7s;}
+.loader-center{
+  position:absolute;top:50%;left:50%;
+  width:24px;height:24px;
+  background:radial-gradient(circle,#fff,var(--gold));
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  box-shadow:0 0 20px var(--gold),0 0 40px #fff;
+  animation:centerPulse 1s ease-in-out infinite;
 }
+@keyframes petalSpin{
+  0%,100%{opacity:.5;transform:rotate(var(--r,0deg)) translateY(-60px) scale(.8);}
+  50%{opacity:1;transform:rotate(var(--r,0deg)) translateY(-60px) scale(1.1);}
+}
+@keyframes centerPulse{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.4);}}
 
-.glitch-bar:nth-child(1) { top: 20%; height: 3px; animation-delay: 0s; }
-.glitch-bar:nth-child(2) { top: 45%; height: 5px; animation-delay: 0.1s; }
-.glitch-bar:nth-child(3) { top: 70%; height: 2px; animation-delay: 0.2s; }
-.glitch-bar:nth-child(4) { top: 85%; height: 8px; animation-delay: 0.05s; }
-.glitch-bar:nth-child(5) { top: 10%; height: 4px; animation-delay: 0.15s; }
+.loader-text{
+  font-family:'Dancing Script',cursive;
+  font-size:clamp(1.2rem,3vw,1.8rem);
+  color:#fff;text-align:center;
+  text-shadow:0 0 20px var(--pk),0 0 40px var(--pp);
+  animation:textPulse 1.5s ease-in-out infinite;
+}
+@keyframes textPulse{0%,100%{opacity:.6;}50%{opacity:1;}}
 
-.glitch-zigzag {
-  position: absolute; inset: 0;
+.loader-bar-wrap{
+  width:min(300px,70vw);height:3px;
+  background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;
+}
+.loader-bar{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,var(--pk),var(--pp),var(--rd),var(--pk));
+  background-size:300%;
+  border-radius:2px;
+  animation:barGlow 1s linear infinite;
+  transition:width .1s linear;
+}
+@keyframes barGlow{0%{background-position:0%;}100%{background-position:300%;}}
+
+/* ══ BACKGROUND VIDEO ══ */
+#bg-video-wrap{
+  position:fixed;inset:0;z-index:0;overflow:hidden;
+}
+#bg-video{
+  position:absolute;
+  min-width:100%;min-height:100%;
+  width:auto;height:auto;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  object-fit:cover;
+}
+.bg-overlay{
+  position:absolute;inset:0;
   background:
-    repeating-linear-gradient(
-      45deg,
-      transparent 0px, transparent 10px,
-      rgba(0,255,65,0.02) 10px, rgba(0,255,65,0.02) 12px
-    ),
-    repeating-linear-gradient(
-      -45deg,
-      transparent 0px, transparent 10px,
-      rgba(255,0,100,0.02) 10px, rgba(255,0,100,0.02) 12px
-    );
-  animation: zigzagShift 0.5s linear infinite;
+    radial-gradient(ellipse at 20% 20%,rgba(185,79,204,.55) 0%,transparent 55%),
+    radial-gradient(ellipse at 80% 80%,rgba(255,77,141,.55) 0%,transparent 55%),
+    radial-gradient(ellipse at 50% 50%,rgba(13,0,21,.7) 0%,transparent 80%),
+    linear-gradient(135deg,rgba(26,0,32,.85),rgba(13,0,21,.9));
+}
+
+/* ── fallback bg if no video ── */
+.bg-fallback{
+  position:fixed;inset:0;z-index:0;
+  background:
+    radial-gradient(ellipse at 15% 15%,rgba(185,79,204,.6),transparent 50%),
+    radial-gradient(ellipse at 85% 85%,rgba(232,48,90,.5),transparent 50%),
+    radial-gradient(ellipse at 50% 50%,rgba(255,77,141,.3),transparent 60%),
+    linear-gradient(135deg,#1a0020 0%,#0d0015 40%,#2d0035 100%);
+}
+
+/* ══ FLOATING PARTICLES ══ */
+#particles{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
+.fp{
+  position:absolute;
+  animation:fpRise linear infinite;
+  opacity:0;
+}
+@keyframes fpRise{
+  0%{transform:translateY(110vh) rotate(0deg) scale(0);opacity:0;}
+  5%{opacity:1;}
+  95%{opacity:.8;}
+  100%{transform:translateY(-10vh) rotate(720deg) scale(.5);opacity:0;}
+}
+
+/* ══ MAIN SITE WRAPPER ══ */
+#site{
+  position:relative;z-index:10;
+  min-height:100vh;
+  opacity:0;
+  transition:opacity 1.2s ease;
+}
+#site.show{opacity:1;}
+
+/* ══ HERO SECTION ══ */
+.hero{
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;
+  padding:60px 20px 40px;
+  position:relative;
+}
+
+/* ── Crown ── */
+.crown{
+  font-size:clamp(2rem,5vw,3.5rem);
+  animation:crownFloat 3s ease-in-out infinite;
+  filter:drop-shadow(0 0 20px var(--gold));
+  margin-bottom:10px;display:block;
+}
+@keyframes crownFloat{
+  0%,100%{transform:translateY(0) rotate(-5deg);}
+  50%{transform:translateY(-15px) rotate(5deg);}
+}
+
+/* ── Avatar stack ── */
+.avatar-stack{
+  position:relative;display:inline-flex;
+  justify-content:center;align-items:center;
+  margin-bottom:30px;
+}
+.avatar-glow-ring{
+  position:absolute;
+  border-radius:50%;
+  animation:ringPulse 2s ease-in-out infinite;
+}
+.agr1{
+  width:calc(var(--as) + 40px);height:calc(var(--as) + 40px);
+  border:2px solid rgba(255,77,141,.6);
+  --as:160px;
+}
+.agr2{
+  width:calc(var(--as) + 70px);height:calc(var(--as) + 70px);
+  border:1px solid rgba(185,79,204,.3);
+  --as:160px;
+}
+.agr3{
+  width:calc(var(--as) + 100px);height:calc(var(--as) + 100px);
+  border:1px solid rgba(255,77,141,.15);
+  --as:160px;
+  animation-direction:reverse;
+}
+@keyframes ringPulse{
+  0%,100%{transform:rotate(0deg) scale(1);opacity:.7;}
+  50%{transform:rotate(180deg) scale(1.05);opacity:1;}
+}
+.avatar-img{
+  width:clamp(130px,18vw,175px);height:clamp(130px,18vw,175px);
+  border-radius:50%;object-fit:cover;
+  border:3px solid rgba(255,130,180,.5);
+  box-shadow:
+    0 0 0 8px rgba(255,77,141,.08),
+    0 0 40px rgba(255,77,141,.5),
+    0 0 80px rgba(185,79,204,.3),
+    inset 0 0 30px rgba(255,255,255,.05);
+  position:relative;z-index:2;
+  animation:avatarFloat 4s ease-in-out infinite;
+  transition:transform .4s,box-shadow .4s;
+}
+.avatar-img:hover{
+  transform:scale(1.08) rotate(3deg);
+  box-shadow:0 0 60px rgba(255,77,141,.8),0 0 100px rgba(185,79,204,.5);
+}
+@keyframes avatarFloat{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(-12px);}
+}
+
+/* ── Name ── */
+.hero-name{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(3rem,9vw,7rem);
+  font-weight:900;font-style:italic;
+  line-height:1;margin-bottom:5px;
+  background:linear-gradient(135deg,#fff 0%,var(--pk2) 30%,var(--pp2) 60%,var(--gold) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;background-size:300%;
+  animation:nameShimmer 4s ease-in-out infinite;
+  filter:drop-shadow(0 0 30px rgba(255,130,180,.4));
+  letter-spacing:-.02em;
+}
+@keyframes nameShimmer{
+  0%,100%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+}
+.hero-subtitle{
+  font-family:'Dancing Script',cursive;
+  font-size:clamp(1.5rem,4vw,3rem);
+  font-weight:600;
+  background:linear-gradient(90deg,var(--pp2),var(--pk),var(--rd2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  display:block;margin-bottom:15px;
+  animation:subtitleWave 3s ease-in-out infinite;
+}
+@keyframes subtitleWave{
+  0%,100%{letter-spacing:.05em;}
+  50%{letter-spacing:.15em;}
+}
+.hero-tagline{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(.9rem,2.5vw,1.3rem);
+  font-style:italic;font-weight:300;
+  color:rgba(255,200,220,.8);
+  margin-bottom:25px;
+  max-width:500px;
+  line-height:1.7;
+}
+
+/* ── Heart divider ── */
+.heart-divider{
+  display:flex;align-items:center;gap:12px;
+  margin:20px 0;justify-content:center;
+}
+.heart-line{
+  width:80px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,130,180,.5),transparent);
+}
+.heart-center-icon{
+  font-size:1.2rem;color:var(--pk);
+  animation:heartBeat 1s ease-in-out infinite;
+  text-shadow:0 0 15px var(--pk);
+}
+@keyframes heartBeat{
+  0%,100%{transform:scale(1);}
+  15%{transform:scale(1.3);}
+  30%{transform:scale(1);}
+  45%{transform:scale(1.15);}
+}
+
+/* ── Social row ── */
+.social-row{
+  display:flex;gap:12px;justify-content:center;
+  flex-wrap:wrap;margin:20px 0;
+}
+.soc-btn{
+  display:flex;align-items:center;justify-content:center;
+  width:48px;height:48px;border-radius:16px;
+  background:var(--glass2);
+  border:1px solid var(--border);
+  color:#fff;font-size:1.1rem;
+  text-decoration:none;
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);
+  backdrop-filter:blur(12px);
+  position:relative;overflow:hidden;
+}
+.soc-btn::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--pk),var(--pp));
+  opacity:0;transition:opacity .3s;
+}
+.soc-btn i{position:relative;z-index:1;}
+.soc-btn:hover{
+  transform:translateY(-8px) scale(1.15) rotate(-5deg);
+  border-color:var(--pk);
+  box-shadow:0 15px 40px rgba(255,77,141,.5);
+}
+.soc-btn:hover::before{opacity:1;}
+
+/* ══ INTRO OVERLAY ══ */
+#intro{
+  position:fixed;inset:0;z-index:8000;
+  background:var(--dark3);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:20px;
+  transition:opacity .8s ease,transform .8s ease;
+}
+#intro.hide{opacity:0;transform:scale(1.05);pointer-events:none;}
+.intro-flowers{
+  display:flex;gap:20px;font-size:2rem;
+  animation:introFlowers 2s ease-in-out infinite;
+}
+@keyframes introFlowers{
+  0%,100%{gap:20px;}
+  50%{gap:30px;}
+}
+.intro-typing{
+  font-family:'Dancing Script',cursive;
+  font-size:clamp(1.3rem,4vw,2rem);
+  color:#fff;min-height:2.5em;
+  text-align:center;max-width:90vw;
+  text-shadow:0 0 30px var(--pk),0 0 60px var(--pp);
+  line-height:1.5;
+}
+.typing-cursor{
+  display:inline-block;
+  animation:blinkC .7s step-end infinite;
+  color:var(--pk);
+}
+@keyframes blinkC{0%,100%{opacity:1;}50%{opacity:0;}}
+.intro-skip{
+  font-family:'Poppins',sans-serif;font-size:.75rem;
+  color:rgba(255,130,180,.5);
+  border:1px solid rgba(255,130,180,.2);
+  padding:8px 20px;border-radius:20px;
+  background:transparent;cursor:pointer;
+  transition:all .3s;margin-top:10px;
+  letter-spacing:.15em;
+}
+.intro-skip:hover{color:var(--pk);border-color:var(--pk);background:rgba(255,77,141,.1);}
+
+/* ══ ENTER BUTTON (full page) ══ */
+#enter-screen{
+  position:fixed;inset:0;z-index:7000;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:30px;
+  background:radial-gradient(ellipse at center,rgba(255,77,141,.15),transparent 70%),var(--dark3);
+  opacity:0;pointer-events:none;
+  transition:opacity .6s ease;
+}
+#enter-screen.show{opacity:1;pointer-events:all;}
+
+.enter-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(1.5rem,5vw,3.5rem);
+  font-weight:900;font-style:italic;
+  background:linear-gradient(135deg,#fff,var(--pk2),var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;text-align:center;
+  animation:enterTitlePulse 2s ease-in-out infinite;
+}
+@keyframes enterTitlePulse{
+  0%,100%{filter:drop-shadow(0 0 20px rgba(255,130,180,.4));}
+  50%{filter:drop-shadow(0 0 50px rgba(255,130,180,.9)) drop-shadow(0 0 80px rgba(185,79,204,.6));}
+}
+.enter-sub{
+  font-family:'Dancing Script',cursive;
+  font-size:clamp(1rem,3vw,1.5rem);
+  color:rgba(255,180,200,.7);letter-spacing:.1em;
+}
+
+.btn-enter{
+  position:relative;overflow:hidden;
+  padding:18px 70px;
+  font-family:'Playfair Display',serif;
+  font-size:clamp(1.1rem,3vw,1.6rem);
+  font-style:italic;font-weight:700;
+  color:#fff;border:none;cursor:pointer;
+  border-radius:60px;
+  background:linear-gradient(135deg,var(--pk),var(--pp),var(--rd));
+  background-size:300%;
+  animation:btnGrad 3s ease infinite,btnEntPulse 2s ease-in-out infinite;
+  box-shadow:0 0 40px rgba(255,77,141,.5),0 20px 60px rgba(185,79,204,.3);
+  letter-spacing:.05em;
+  transition:transform .2s;
+}
+.btn-enter:hover{transform:scale(1.08);}
+.btn-enter:active{transform:scale(.96);}
+.btn-enter::before{
+  content:'';position:absolute;
+  top:-50%;left:-50%;width:200%;height:200%;
+  background:conic-gradient(transparent 0deg,rgba(255,255,255,.15) 180deg,transparent 360deg);
+  animation:btnSweep 2s linear infinite;
+}
+@keyframes btnGrad{0%,100%{background-position:0%;}50%{background-position:100%;}}
+@keyframes btnEntPulse{
+  0%,100%{box-shadow:0 0 40px rgba(255,77,141,.5),0 20px 60px rgba(185,79,204,.3);}
+  50%{box-shadow:0 0 80px rgba(255,77,141,.9),0 30px 80px rgba(185,79,204,.6),0 0 120px rgba(232,48,90,.4);}
+}
+@keyframes btnSweep{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+
+/* ── Enter floating hearts ── */
+.enter-hearts{
+  display:flex;gap:15px;font-size:1.5rem;
+  animation:enterHeartsAnim 2s ease-in-out infinite;
+}
+@keyframes enterHeartsAnim{
+  0%,100%{transform:scale(1);gap:15px;}
+  50%{transform:scale(1.1);gap:25px;}
+}
+
+/* ══ BIO CARDS SECTION ══ */
+.bio-section{padding:40px 20px 80px;max-width:1000px;margin:0 auto;}
+
+.section-heading{
+  text-align:center;margin-bottom:40px;
+}
+.section-heading h2{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(1.5rem,4vw,2.5rem);
+  font-style:italic;font-weight:700;
+  background:linear-gradient(135deg,var(--pk2),var(--pp2),var(--gold2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;margin-bottom:8px;
+}
+.section-heading p{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-size:1rem;
+  color:rgba(255,180,210,.6);
+}
+
+.bio-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));
+  gap:clamp(12px,2vw,20px);
+}
+
+.bio-card{
+  position:relative;overflow:hidden;
+  background:var(--glass);
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:clamp(18px,3vw,28px);
+  cursor:pointer;
+  backdrop-filter:blur(20px);
+  transition:all .4s cubic-bezier(.34,1.56,.64,1);
+  animation:cardIn .6s both;
+  -webkit-tap-highlight-color:transparent;
+}
+.bio-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,77,141,.12),rgba(185,79,204,.12));
+  opacity:0;transition:opacity .3s;
+}
+.bio-card::after{
+  content:'';position:absolute;
+  top:-100%;left:-100%;width:300%;height:300%;
+  background:conic-gradient(
+    transparent 0deg,
+    rgba(255,130,180,.08) 90deg,
+    transparent 180deg
+  );
+  animation:cardRotate 6s linear infinite;
+  opacity:0;transition:opacity .3s;
+}
+.bio-card:hover{
+  transform:translateY(-12px) scale(1.03) rotate(.5deg);
+  border-color:rgba(255,77,141,.6);
+  box-shadow:
+    0 30px 80px rgba(255,77,141,.25),
+    0 0 0 1px rgba(255,77,141,.15),
+    inset 0 1px 0 rgba(255,255,255,.1);
+}
+.bio-card:hover::before{opacity:1;}
+.bio-card:hover::after{opacity:1;}
+.bio-card:active{transform:scale(.97);}
+
+@keyframes cardIn{
+  from{opacity:0;transform:translateY(40px) scale(.9);}
+  to{opacity:1;transform:translateY(0) scale(1);}
+}
+@keyframes cardRotate{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+
+.card-top{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.card-icon-wrap{
+  width:clamp(38px,5vw,48px);height:clamp(38px,5vw,48px);
+  border-radius:14px;
+  background:linear-gradient(135deg,rgba(255,77,141,.3),rgba(185,79,204,.3));
+  border:1px solid rgba(255,130,180,.25);
+  display:flex;align-items:center;justify-content:center;
+  font-size:clamp(1rem,2vw,1.3rem);
+  flex-shrink:0;
+  transition:all .3s;
+  box-shadow:0 4px 15px rgba(255,77,141,.2);
+}
+.bio-card:hover .card-icon-wrap{
+  background:linear-gradient(135deg,var(--pk),var(--pp));
+  transform:rotate(10deg) scale(1.1);
+  box-shadow:0 8px 25px rgba(255,77,141,.5);
+}
+.card-label{
+  font-family:'Montserrat',sans-serif;
+  font-size:clamp(.55rem,1.2vw,.68rem);
+  font-weight:700;letter-spacing:.2em;
+  color:rgba(255,180,210,.5);
+  text-transform:uppercase;
+}
+.card-value{
+  font-family:'Poppins',sans-serif;
+  font-size:clamp(.8rem,1.8vw,.95rem);
+  font-weight:500;color:rgba(255,240,248,.9);
+  line-height:1.5;
+}
+.card-play-hint{
+  position:absolute;top:12px;right:14px;
+  font-size:.65rem;color:rgba(255,130,180,.4);
+  transition:all .3s;
+  display:flex;align-items:center;gap:4px;
+}
+.bio-card:hover .card-play-hint{
+  color:var(--pk);
+  transform:scale(1.2);
+  text-shadow:0 0 10px var(--pk);
+}
+
+/* quote card */
+.card-quote{grid-column:1/-1;}
+.card-quote .card-value{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(1rem,2.5vw,1.25rem);
+  font-style:italic;font-weight:400;
+  color:rgba(255,220,235,.9);
+  text-align:center;line-height:1.8;
+}
+
+/* playing state */
+.bio-card.playing{
+  border-color:var(--pk);
+  animation:cardPlaying 1.5s ease-in-out infinite;
+}
+@keyframes cardPlaying{
+  0%,100%{box-shadow:0 0 30px rgba(255,77,141,.4),0 0 60px rgba(185,79,204,.2);}
+  50%{box-shadow:0 0 60px rgba(255,77,141,.8),0 0 100px rgba(185,79,204,.5),0 0 140px rgba(232,48,90,.3);}
+}
+
+/* ══ MEDIA POPUP ══ */
+#popup{
+  position:fixed;inset:0;z-index:20000;
+  display:none;align-items:center;justify-content:center;
+  background:rgba(10,0,20,.85);backdrop-filter:blur(20px);
+}
+#popup.show{display:flex;}
+.popup-box{
+  background:linear-gradient(135deg,rgba(45,0,53,.95),rgba(26,0,32,.95));
+  border:1px solid rgba(255,130,180,.3);
+  border-radius:28px;
+  padding:clamp(20px,4vw,35px);
+  max-width:min(520px,92vw);width:100%;
+  position:relative;
+  box-shadow:0 0 100px rgba(255,77,141,.3),0 0 200px rgba(185,79,204,.2);
+  animation:popupIn .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popupIn{
+  from{transform:scale(.3) rotate(-10deg);opacity:0;}
+  to{transform:scale(1) rotate(0deg);opacity:1;}
+}
+.popup-close{
+  position:absolute;top:16px;right:16px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,130,180,.2);
+  border-radius:50%;width:36px;height:36px;
+  color:rgba(255,130,180,.7);font-size:1.1rem;
+  cursor:pointer;transition:all .3s;
+  display:flex;align-items:center;justify-content:center;
+  line-height:1;
+}
+.popup-close:hover{background:rgba(255,77,141,.2);color:#fff;transform:rotate(90deg) scale(1.1);}
+.popup-title{
+  font-family:'Dancing Script',cursive;
+  font-size:1.4rem;color:var(--pk2);
+  margin-bottom:20px;letter-spacing:.05em;
+  text-shadow:0 0 20px rgba(255,130,180,.5);
+}
+.popup-media{width:100%;}
+.popup-media audio{width:100%;outline:none;border-radius:12px;}
+.popup-media video{width:100%;border-radius:16px;max-height:280px;object-fit:cover;}
+.popup-media iframe{width:100%;height:250px;border-radius:16px;border:none;}
+.no-media{
+  text-align:center;padding:30px 20px;
+  font-family:'Poppins',sans-serif;font-size:.9rem;
+  color:rgba(255,150,190,.5);
+}
+.no-media .nm-icon{font-size:2.5rem;margin-bottom:12px;display:block;animation:heartBeat 1s ease-in-out infinite;}
+
+/* ══ MUSIC WIDGET ══ */
+#music-widget{
+  position:fixed;bottom:20px;left:20px;z-index:500;
+  background:rgba(45,0,53,.85);backdrop-filter:blur(20px);
+  border:1px solid rgba(255,130,180,.25);
+  border-radius:20px;padding:10px 18px;
+  display:none;align-items:center;gap:12px;
+  cursor:pointer;transition:all .3s;
+  box-shadow:0 8px 30px rgba(255,77,141,.2);
+}
+#music-widget.show{display:flex;}
+#music-widget:hover{border-color:rgba(255,77,141,.5);box-shadow:0 12px 40px rgba(255,77,141,.4);}
+.mw-icon{
+  font-size:1.1rem;color:var(--pk);
+  animation:musicSpin 2s linear infinite;
+}
+.mw-icon.paused{animation-play-state:paused;}
+@keyframes musicSpin{from{transform:rotate(0);}to{transform:rotate(360deg);}}
+.mw-bars{display:flex;gap:3px;align-items:flex-end;height:18px;}
+.mw-bar{
+  width:3px;border-radius:2px;
+  background:linear-gradient(to top,var(--pk),var(--pp2));
+  animation:barDance .6s ease-in-out infinite alternate;
+}
+.mw-bar:nth-child(1){height:60%;animation-delay:0s;}
+.mw-bar:nth-child(2){height:100%;animation-delay:.1s;}
+.mw-bar:nth-child(3){height:40%;animation-delay:.2s;}
+.mw-bar:nth-child(4){height:80%;animation-delay:.15s;}
+.mw-bar:nth-child(5){height:50%;animation-delay:.05s;}
+@keyframes barDance{from{transform:scaleY(1);}to{transform:scaleY(.3);}}
+.mw-text{
+  font-family:'Poppins',sans-serif;font-size:.7rem;
+  color:rgba(255,180,210,.7);letter-spacing:.1em;
+}
+
+/* ══ DECORATIVE ROSE CORNERS ══ */
+.rose-corner{
+  position:fixed;font-size:clamp(1.5rem,3vw,2.5rem);
+  pointer-events:none;z-index:3;
+  filter:drop-shadow(0 0 15px rgba(255,77,141,.5));
+  animation:roseFloat 4s ease-in-out infinite;
+}
+.rc-tl{top:15px;left:15px;animation-delay:0s;}
+.rc-tr{top:15px;right:15px;animation-delay:1s;transform:scaleX(-1);}
+.rc-bl{bottom:15px;left:15px;animation-delay:2s;transform:scaleY(-1);}
+.rc-br{bottom:15px;right:15px;animation-delay:3s;transform:scale(-1);}
+@keyframes roseFloat{
+  0%,100%{transform:translateY(0) rotate(0deg);}
+  50%{transform:translateY(-8px) rotate(5deg);}
+}
+.rc-tr{animation-name:roseFloatMirror;}
+@keyframes roseFloatMirror{
+  0%,100%{transform:scaleX(-1) translateY(0);}
+  50%{transform:scaleX(-1) translateY(-8px);}
+}
+
+/* ══ SCROLLBAR ══ */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:rgba(255,255,255,.03);}
+::-webkit-scrollbar-thumb{background:linear-gradient(var(--pk),var(--pp));border-radius:2px;}
+
+/* ══ RIPPLE ══ */
+.ripple{
+  position:fixed;border-radius:50%;pointer-events:none;z-index:99997;
+  transform:translate(-50%,-50%) scale(0);
+  animation:rippleAnim .6s ease-out forwards;
+  border:2px solid rgba(255,130,180,.6);
+}
+@keyframes rippleAnim{
+  to{transform:translate(-50%,-50%) scale(4);opacity:0;}
+}
+
+/* ══ RESPONSIVE ══ */
+@media(max-width:480px){
+  .bio-grid{grid-template-columns:1fr 1fr;}
+  .card-quote{grid-column:1/-1;}
 }
-
-.glitch-text-center {
-  position: relative;
-  font-family: 'Orbitron', monospace;
-  font-size: clamp(1rem, 4vw, 2.5rem);
-  font-weight: 900;
-  color: #00ff41;
-  text-shadow: 2px 0 #ff0066, -2px 0 #00ffff;
-  animation: glitchText 0.3s ease infinite;
-  letter-spacing: 0.3em;
-  z-index: 2;
-}
-
-.glitch-text-center::before {
-  content: attr(data-text);
-  position: absolute;
-  left: 3px; top: 0;
-  color: #ff0066;
-  clip-path: polygon(0 30%, 100% 30%, 100% 50%, 0 50%);
-  animation: glitchClip1 0.4s infinite;
-}
-
-.glitch-text-center::after {
-  content: attr(data-text);
-  position: absolute;
-  left: -3px; top: 0;
-  color: #00ffff;
-  clip-path: polygon(0 60%, 100% 60%, 100% 80%, 0 80%);
-  animation: glitchClip2 0.5s infinite;
-}
-
-.error-code {
-  position: absolute;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
-  color: rgba(0,255,65,0.4);
-  animation: randomPos 0.2s infinite;
-}
-
-.error-code:nth-child(1) { top: 15%; left: 5%; }
-.error-code:nth-child(2) { top: 25%; right: 8%; }
-.error-code:nth-child(3) { top: 55%; left: 12%; }
-.error-code:nth-child(4) { top: 75%; right: 5%; }
-.error-code:nth-child(5) { top: 40%; left: 40%; }
-.error-code:nth-child(6) { top: 65%; left: 60%; }
-.error-code:nth-child(7) { top: 5%; left: 30%; }
-.error-code:nth-child(8) { top: 90%; left: 20%; }
-
-@keyframes glitchBar {
-  0%, 100% { opacity: 0; transform: translateX(0); }
-  50% { opacity: 1; transform: translateX(random(20px) - 10px); }
-  25% { transform: translateX(-15px); opacity: 0.8; }
-  75% { transform: translateX(10px); opacity: 0.6; }
-}
-
-@keyframes glitchText {
-  0%, 90%, 100% { text-shadow: 2px 0 #ff0066, -2px 0 #00ffff; transform: translate(0); }
-  92% { text-shadow: -3px 0 #ff0066, 3px 0 #00ffff; transform: translate(-3px, 1px); }
-  94% { text-shadow: 3px 0 #ff0066, -3px 0 #00ffff; transform: translate(3px, -1px); }
-  96% { text-shadow: 0 0 #ff0066, 0 0 #00ffff; transform: translate(0); }
-}
-
-@keyframes glitchClip1 {
-  0%, 100% { clip-path: polygon(0 30%, 100% 30%, 100% 50%, 0 50%); transform: translateX(3px); }
-  50% { clip-path: polygon(0 15%, 100% 15%, 100% 35%, 0 35%); transform: translateX(-3px); }
-}
-
-@keyframes glitchClip2 {
-  0%, 100% { clip-path: polygon(0 60%, 100% 60%, 100% 80%, 0 80%); transform: translateX(-3px); }
-  50% { clip-path: polygon(0 75%, 100% 75%, 100% 90%, 0 90%); transform: translateX(3px); }
-}
-
-@keyframes scanlines {
-  0% { background-position: 0 0; }
-  100% { background-position: 0 4px; }
-}
-
-@keyframes zigzagShift {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(24px); }
-}
-
-@keyframes randomPos {
-  0%, 100% { opacity: 0.3; transform: translate(0,0); }
-  25% { opacity: 0.8; transform: translate(2px, -1px); }
-  75% { opacity: 0.1; transform: translate(-1px, 2px); }
-}
-
-@keyframes glitchPhaseOut {
-  0% { opacity: 1; }
-  100% { opacity: 0; pointer-events: none; }
-}
-
-/* ==================== PHASE 2: TERMINAL ==================== */
-#phase-terminal {
-  position: fixed; inset: 0;
-  background: #0a0a0a;
-  z-index: 900;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  animation: terminalFadeIn 0.8s 3.5s forwards;
-}
-
-@keyframes terminalFadeIn {
-  to { opacity: 1; }
-}
-
-.terminal-window {
-  width: min(700px, 90vw);
-  background: rgba(0,20,0,0.95);
-  border: 1px solid #00ff41;
-  border-radius: 8px;
-  box-shadow: 0 0 40px rgba(0,255,65,0.3), inset 0 0 40px rgba(0,10,0,0.5);
-  overflow: hidden;
-}
-
-.terminal-header {
-  background: #1a1a1a;
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-bottom: 1px solid #00ff41;
-}
-
-.terminal-dot {
-  width: 12px; height: 12px;
-  border-radius: 50%;
-}
-.terminal-dot.red { background: #ff5f56; }
-.terminal-dot.yellow { background: #ffbd2e; }
-.terminal-dot.green { background: #27c93f; }
-
-.terminal-title {
-  flex: 1;
-  text-align: center;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.75rem;
-  color: #00ff41;
-  letter-spacing: 0.2em;
-}
-
-.terminal-body {
-  padding: 20px;
-  min-height: 300px;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: clamp(0.7rem, 2vw, 0.9rem);
-  color: #00ff41;
-  line-height: 1.8;
-}
-
-.terminal-line {
-  display: block;
-  opacity: 0;
-  animation: lineAppear 0.1s forwards;
-}
-
-.terminal-cursor {
-  display: inline-block;
-  width: 8px;
-  height: 1em;
-  background: #00ff41;
-  animation: blink 0.7s infinite;
-  vertical-align: text-bottom;
-  margin-left: 2px;
-}
-
-.terminal-prompt { color: #ffbd2e; }
-.terminal-success { color: #27c93f; }
-.terminal-info { color: #00ffff; }
-.terminal-warn { color: #ff6eb4; }
-
-@keyframes lineAppear { to { opacity: 1; } }
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-
-/* ==================== PHASE 3: ACCESS GRANTED ==================== */
-#phase-access {
-  position: fixed; inset: 0;
-  background: #fff;
-  z-index: 800;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  pointer-events: none;
-}
-
-#phase-access.active {
-  pointer-events: all;
-}
-
-.access-title {
-  font-family: 'Orbitron', monospace;
-  font-size: clamp(1.5rem, 6vw, 4rem);
-  font-weight: 900;
-  color: #000;
-  letter-spacing: 0.15em;
-  text-align: center;
-  animation: accessPulse 1s ease infinite;
-}
-
-.access-sub {
-  font-family: 'Share Tech Mono', monospace;
-  color: #333;
-  margin: 10px 0 40px;
-  letter-spacing: 0.3em;
-  font-size: clamp(0.6rem, 2vw, 0.9rem);
-}
-
-.enter-btn {
-  font-family: 'Orbitron', monospace;
-  font-size: clamp(1rem, 3vw, 1.5rem);
-  font-weight: 700;
-  letter-spacing: 0.3em;
-  padding: 20px 60px;
-  background: #000;
-  color: #fff;
-  border: 3px solid #000;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s;
-  animation: enterPulse 1.5s ease infinite;
-}
-
-.enter-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(45deg, #ff6eb4, #9c27b0, #00ffff, #00ff41);
-  background-size: 400%;
-  opacity: 0;
-  transition: opacity 0.3s;
-  animation: gradientShift 3s linear infinite;
-}
-
-.enter-btn:hover::before { opacity: 1; }
-.enter-btn:hover { color: #fff; border-color: transparent; transform: scale(1.05); }
-.enter-btn span { position: relative; z-index: 1; }
-
-@keyframes accessPulse {
-  0%, 100% { text-shadow: 0 0 20px rgba(0,0,0,0.3); }
-  50% { text-shadow: 0 0 40px rgba(255,110,180,0.8), 0 0 60px rgba(156,39,176,0.6); }
-}
-
-@keyframes enterPulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(0,0,0,0.3); }
-  50% { box-shadow: 0 0 40px rgba(255,110,180,0.6), 0 0 80px rgba(156,39,176,0.4); }
-}
-
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 400% 50%; }
-}
-
-/* ==================== LOADING BAR ==================== */
-#loading-screen {
-  position: fixed; inset: 0;
-  background: #000;
-  z-index: 700;
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-}
-
-.loading-label {
-  font-family: 'Orbitron', monospace;
-  color: #00ff41;
-  font-size: clamp(0.7rem, 2vw, 1rem);
-  letter-spacing: 0.3em;
-  animation: loadingPulse 0.5s ease infinite;
-}
-
-.loading-bar-container {
-  width: min(400px, 80vw);
-  height: 4px;
-  background: rgba(0,255,65,0.2);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.loading-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #00ff41, #00ffff, #ff6eb4);
-  background-size: 200%;
-  width: 0%;
-  border-radius: 2px;
-  transition: width 0.05s linear;
-  animation: loadingGlow 1s linear infinite;
-}
-
-@keyframes loadingPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-@keyframes loadingGlow {
-  0% { background-position: 0% 50%; box-shadow: 0 0 10px #00ff41; }
-  100% { background-position: 200% 50%; box-shadow: 0 0 20px #ff6eb4; }
-}
-
-/* ==================== VORTEX ==================== */
-#vortex-container {
-  position: fixed; inset: 0;
-  z-index: 600;
-  pointer-events: none;
-  display: none;
-}
-
-.vortex-active {
-  animation: vortexSpin 1.5s cubic-bezier(0.55, 0, 1, 0.45) forwards !important;
-}
-
-@keyframes vortexSpin {
-  0% { transform: rotate(0deg) scale(1); opacity: 1; }
-  50% { transform: rotate(180deg) scale(0.5); opacity: 0.6; }
-  100% { transform: rotate(360deg) scale(0) translateY(50vh); opacity: 0; }
-}
-
-/* ==================== PHASE 5: BIO PAGE ==================== */
-#phase-bio {
-  position: fixed; inset: 0;
-  background: linear-gradient(135deg, #1a0026 0%, #2d0040 30%, #1a0033 60%, #0d001a 100%);
-  z-index: 100;
-  overflow-y: auto;
-  opacity: 0;
-  pointer-events: none;
-  scroll-behavior: smooth;
-}
-
-#phase-bio.active {
-  opacity: 1;
-  pointer-events: all;
-  transition: opacity 1s ease;
-}
-
-/* Animated background */
-.bio-bg-animation {
-  position: fixed; inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
-}
-
-.bio-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.4;
-  animation: orbFloat 6s ease-in-out infinite;
-}
-
-.bio-orb:nth-child(1) {
-  width: 400px; height: 400px;
-  background: radial-gradient(circle, #ff6eb4, transparent);
-  top: -100px; left: -100px;
-  animation-duration: 8s;
-}
-
-.bio-orb:nth-child(2) {
-  width: 300px; height: 300px;
-  background: radial-gradient(circle, #9c27b0, transparent);
-  bottom: -50px; right: -50px;
-  animation-duration: 10s;
-  animation-delay: -3s;
-}
-
-.bio-orb:nth-child(3) {
-  width: 200px; height: 200px;
-  background: radial-gradient(circle, #e91e8c, transparent);
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  animation-duration: 12s;
-  animation-delay: -6s;
-}
-
-@keyframes orbFloat {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(30px, -20px) scale(1.1); }
-  66% { transform: translate(-20px, 30px) scale(0.9); }
-}
-
-/* Floating particles */
-.particle {
-  position: fixed;
-  pointer-events: none;
-  font-size: clamp(0.8rem, 1.5vw, 1.2rem);
-  animation: particleFloat linear infinite;
-  z-index: 1;
-  opacity: 0.6;
-}
-
-@keyframes particleFloat {
-  0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-  10% { opacity: 0.6; }
-  90% { opacity: 0.6; }
-  100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
-}
-
-/* Bio content */
-.bio-content {
-  position: relative;
-  z-index: 10;
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 40px 20px 80px;
-}
-
-/* Profile header */
-.bio-header {
-  text-align: center;
-  margin-bottom: 50px;
-  animation: bioHeaderReveal 1s 0.3s both;
-}
-
-@keyframes bioHeaderReveal {
-  from { transform: translateY(-30px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-.bio-avatar-container {
-  position: relative;
-  display: inline-block;
-  margin-bottom: 20px;
-}
-
-.bio-avatar {
-  width: clamp(120px, 20vw, 160px);
-  height: clamp(120px, 20vw, 160px);
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid rgba(255,110,180,0.5);
-  box-shadow: 0 0 40px rgba(255,110,180,0.4), 0 0 80px rgba(156,39,176,0.3);
-  animation: avatarPulse 3s ease infinite;
-}
-
-.avatar-ring {
-  position: absolute; inset: -8px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  background: linear-gradient(#1a0026, #1a0026) padding-box,
-              linear-gradient(45deg, #ff6eb4, #9c27b0, #ff6eb4) border-box;
-  animation: ringRotate 4s linear infinite;
-}
-
-.avatar-ring-outer {
-  position: absolute; inset: -16px;
-  border-radius: 50%;
-  border: 1px solid rgba(255,110,180,0.3);
-  animation: ringRotate 6s linear infinite reverse;
-}
-
-@keyframes avatarPulse {
-  0%, 100% { box-shadow: 0 0 40px rgba(255,110,180,0.4), 0 0 80px rgba(156,39,176,0.3); }
-  50% { box-shadow: 0 0 60px rgba(255,110,180,0.7), 0 0 120px rgba(156,39,176,0.5); }
-}
-
-@keyframes ringRotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.bio-name {
-  font-family: 'Orbitron', monospace;
-  font-size: clamp(1.5rem, 5vw, 3rem);
-  font-weight: 900;
-  background: linear-gradient(135deg, #ff6eb4, #ff9ed2, #e91e8c, #9c27b0);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 10px;
-  letter-spacing: 0.1em;
-  animation: nameShimmer 3s ease infinite;
-  background-size: 200%;
-}
-
-@keyframes nameShimmer {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-.bio-tagline {
-  font-family: 'Poppins', sans-serif;
-  color: rgba(255,182,193,0.8);
-  font-size: clamp(0.8rem, 2vw, 1rem);
-  font-weight: 300;
-  letter-spacing: 0.2em;
-  margin-bottom: 20px;
-}
-
-.bio-description {
-  font-family: 'Poppins', sans-serif;
-  color: rgba(255,255,255,0.7);
-  font-size: clamp(0.8rem, 2vw, 0.95rem);
-  line-height: 1.8;
-  max-width: 500px;
-  margin: 0 auto 30px;
-}
-
-/* Social links */
-.social-links {
-  display: flex;
-  justify-content: center;
-  gap: clamp(8px, 2vw, 16px);
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-}
-
-.social-link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: clamp(36px, 5vw, 44px);
-  height: clamp(36px, 5vw, 44px);
-  border-radius: 50%;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,110,180,0.3);
-  color: #ff9ed2;
-  font-size: clamp(0.9rem, 2vw, 1.1rem);
-  text-decoration: none;
-  transition: all 0.3s;
-  backdrop-filter: blur(10px);
-}
-
-.social-link:hover {
-  background: rgba(255,110,180,0.2);
-  border-color: #ff6eb4;
-  color: #fff;
-  transform: translateY(-3px) scale(1.1);
-  box-shadow: 0 10px 30px rgba(255,110,180,0.4);
-}
-
-/* Section title */
-.section-title {
-  font-family: 'Orbitron', monospace;
-  font-size: clamp(0.8rem, 2.5vw, 1rem);
-  color: rgba(255,182,193,0.6);
-  letter-spacing: 0.4em;
-  text-align: center;
-  margin-bottom: 30px;
-  position: relative;
-}
-
-.section-title::before,
-.section-title::after {
-  content: '─────';
-  margin: 0 10px;
-  opacity: 0.4;
-}
-
-/* Bio cards grid */
-.bio-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
-  gap: clamp(12px, 2vw, 20px);
-  margin-bottom: 40px;
-}
-
-.bio-card {
-  position: relative;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,110,180,0.2);
-  border-radius: 16px;
-  padding: clamp(16px, 3vw, 24px);
-  cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  backdrop-filter: blur(10px);
-  overflow: hidden;
-  animation: cardReveal 0.6s both;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.bio-card:nth-child(1) { animation-delay: 0.1s; }
-.bio-card:nth-child(2) { animation-delay: 0.15s; }
-.bio-card:nth-child(3) { animation-delay: 0.2s; }
-.bio-card:nth-child(4) { animation-delay: 0.25s; }
-.bio-card:nth-child(5) { animation-delay: 0.3s; }
-.bio-card:nth-child(6) { animation-delay: 0.35s; }
-.bio-card:nth-child(7) { animation-delay: 0.4s; }
-.bio-card:nth-child(8) { animation-delay: 0.45s; }
-
-@keyframes cardReveal {
-  from { transform: translateY(30px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-.bio-card::before {
-  content: '';
-  position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(255,110,180,0.1), rgba(156,39,176,0.1));
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.bio-card::after {
-  content: '';
-  position: absolute;
-  top: 0; left: -100%;
-  width: 100%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
-  transition: left 0.5s;
-}
-
-.bio-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  border-color: rgba(255,110,180,0.6);
-  box-shadow: 0 20px 60px rgba(255,110,180,0.2), 0 0 0 1px rgba(255,110,180,0.1);
-}
-
-.bio-card:hover::before { opacity: 1; }
-.bio-card:hover::after { left: 100%; }
-
-.bio-card:active { transform: scale(0.97); }
-
-.bio-card.playing {
-  border-color: #ff6eb4;
-  box-shadow: 0 0 30px rgba(255,110,180,0.5), 0 0 60px rgba(156,39,176,0.3);
-  animation: cardPlaying 1s ease infinite;
-}
-
-@keyframes cardPlaying {
-  0%, 100% { box-shadow: 0 0 30px rgba(255,110,180,0.5), 0 0 60px rgba(156,39,176,0.3); }
-  50% { box-shadow: 0 0 50px rgba(255,110,180,0.8), 0 0 80px rgba(156,39,176,0.5); }
-}
-
-.card-icon {
-  font-size: clamp(1.2rem, 3vw, 1.8rem);
-  margin-bottom: 10px;
-  background: linear-gradient(135deg, #ff6eb4, #9c27b0);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.card-label {
-  font-family: 'Orbitron', monospace;
-  font-size: clamp(0.55rem, 1.5vw, 0.65rem);
-  color: rgba(255,182,193,0.6);
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-
-.card-value {
-  font-family: 'Poppins', sans-serif;
-  font-size: clamp(0.75rem, 2vw, 0.95rem);
-  color: rgba(255,255,255,0.9);
-  font-weight: 600;
-  line-height: 1.4;
-}
-
-.card-media-indicator {
-  position: absolute;
-  top: 10px; right: 10px;
-  font-size: 0.6rem;
-  color: rgba(255,110,180,0.5);
-  transition: all 0.3s;
-}
-
-.bio-card:hover .card-media-indicator {
-  color: #ff6eb4;
-  transform: scale(1.3);
-}
-
-/* Quote card - full width */
-.bio-card.quote-card {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: clamp(20px, 4vw, 35px);
-}
-
-.quote-card .card-value {
-  font-size: clamp(0.85rem, 2.5vw, 1.1rem);
-  font-style: italic;
-  font-weight: 300;
-  color: rgba(255,182,193,0.9);
-}
-
-/* Media popup */
-#media-popup {
-  position: fixed; inset: 0;
-  z-index: 2000;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,0.8);
-  backdrop-filter: blur(10px);
-}
-
-#media-popup.active {
-  display: flex;
-}
-
-.popup-content {
-  background: rgba(30,0,50,0.95);
-  border: 1px solid rgba(255,110,180,0.4);
-  border-radius: 20px;
-  padding: 30px;
-  max-width: min(500px, 90vw);
-  width: 100%;
-  position: relative;
-  box-shadow: 0 0 80px rgba(255,110,180,0.3);
-  animation: popupReveal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-@keyframes popupReveal {
-  from { transform: scale(0.5) rotate(-10deg); opacity: 0; }
-  to { transform: scale(1) rotate(0deg); opacity: 1; }
-}
-
-.popup-close {
-  position: absolute;
-  top: 15px; right: 15px;
-  background: none;
-  border: none;
-  color: rgba(255,110,180,0.7);
-  font-size: 1.5rem;
-  cursor: pointer;
-  transition: all 0.3s;
-  line-height: 1;
-}
-
-.popup-close:hover { color: #ff6eb4; transform: rotate(90deg); }
-
-.popup-title {
-  font-family: 'Orbitron', monospace;
-  font-size: 1rem;
-  color: #ff9ed2;
-  margin-bottom: 20px;
-  letter-spacing: 0.2em;
-}
-
-.popup-media {
-  width: 100%;
-  border-radius: 10px;
-  background: rgba(0,0,0,0.5);
-}
-
-.popup-media audio { width: 100%; }
-
-.popup-no-media {
-  font-family: 'Poppins', sans-serif;
-  color: rgba(255,182,193,0.6);
-  text-align: center;
-  padding: 20px;
-  font-size: 0.9rem;
-}
-
-/* Background music control */
-.music-control {
-  position: fixed;
-  bottom: 20px; right: 20px;
-  z-index: 500;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,110,180,0.3);
-  border-radius: 50px;
-  padding: 8px 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  backdrop-filter: blur(10px);
-  transition: all 0.3s;
-  display: none;
-  color: #ff9ed2;
-  font-size: 0.75rem;
-  font-family: 'Orbitron', monospace;
-  letter-spacing: 0.1em;
-}
-
-.music-control:hover {
-  background: rgba(255,110,180,0.15);
-  border-color: #ff6eb4;
-}
-
-.music-control.show { display: flex; }
-.music-icon { animation: musicBounce 0.5s ease infinite alternate; }
-@keyframes musicBounce {
-  from { transform: scale(1); }
-  to { transform: scale(1.2); }
-}
-
-/* Scrollbar */
-#phase-bio::-webkit-scrollbar { width: 4px; }
-#phase-bio::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
-#phase-bio::-webkit-scrollbar-thumb { background: rgba(255,110,180,0.4); border-radius: 2px; }
-
-/* Sparkle effect */
-.sparkle {
-  position: fixed;
-  pointer-events: none;
-  z-index: 999;
-  font-size: 1rem;
-  animation: sparkleAnim 0.8s ease forwards;
-}
-
-@keyframes sparkleAnim {
-  0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 1; }
-  50% { transform: translate(-50%, -50%) scale(1.5) rotate(180deg); opacity: 1; }
-  100% { transform: translate(-50%, -50%) scale(0) rotate(360deg); opacity: 0; }
-}
-
-/* Responsive */
-@media (max-width: 480px) {
-  .bio-grid { grid-template-columns: 1fr 1fr; }
-  .bio-card.quote-card { grid-column: 1 / -1; }
-}
-
-/* ==================== HEARTS ==================== */
-.floating-heart {
-  position: fixed;
-  pointer-events: none;
-  font-size: clamp(0.8rem, 2vw, 1.2rem);
-  z-index: 1;
-  animation: heartFloat linear infinite;
-  opacity: 0;
-}
-
-@keyframes heartFloat {
-  0% { transform: translateY(100vh) rotate(0deg) scale(0); opacity: 0; }
-  10% { opacity: 0.8; transform: translateY(90vh) scale(1); }
-  90% { opacity: 0.8; }
-  100% { transform: translateY(-20px) rotate(20deg) scale(0.5); opacity: 0; }
-}
-
-/* Utility */
-.hidden { display: none !important; }
-
 </style>
 </head>
 <body>
 
-<!-- ========== PHASE 1: GLITCH ========== -->
-<div id="phase-glitch">
-  <div class="glitch-overlay"></div>
-  <div class="glitch-zigzag"></div>
-  <div class="glitch-bars">
-    <div class="glitch-bar"></div>
-    <div class="glitch-bar"></div>
-    <div class="glitch-bar"></div>
-    <div class="glitch-bar"></div>
-    <div class="glitch-bar"></div>
+<!-- Custom Cursor -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- Rose corners -->
+<div class="rose-corner rc-tl">🌹</div>
+<div class="rose-corner rc-tr">🌹</div>
+<div class="rose-corner rc-bl">🌸</div>
+<div class="rose-corner rc-br">🌸</div>
+
+<!-- Background -->
+{% if bg_video %}
+<div id="bg-video-wrap">
+  <video id="bg-video" autoplay muted loop playsinline>
+    <source src="{{ bg_video }}">
+  </video>
+  <div class="bg-overlay"></div>
+</div>
+{% else %}
+<div class="bg-fallback"></div>
+{% endif %}
+
+<!-- Particles -->
+<div id="particles"></div>
+
+<!-- ══ LOADER ══ -->
+<div id="loader">
+  <div class="loader-petals">
+    <div class="loader-petal"></div>
+    <div class="loader-petal"></div>
+    <div class="loader-petal"></div>
+    <div class="loader-petal"></div>
+    <div class="loader-petal"></div>
+    <div class="loader-petal"></div>
+    <div class="loader-petal"></div>
+    <div class="loader-petal"></div>
+    <div class="loader-center"></div>
   </div>
-  <span class="glitch-text-center" data-text="SYSTEM ERROR">SYSTEM ERROR</span>
-  <div class="error-code">ERR_0x4F2A::NULL_REF</div>
-  <div class="error-code">SEGFAULT_0x00FF::CORE_DUMP</div>
-  <div class="error-code">KERNEL_PANIC::INIT_FAILED</div>
-  <div class="error-code">0xDEADBEEF::MEM_CORRUPT</div>
-  <div class="error-code">FIREWALL_BREACH::LEVEL_9</div>
-  <div class="error-code">AUTH_BYPASS::ATTEMPTING</div>
-  <div class="error-code">NET_PKT_DROP::0x7F2B</div>
-  <div class="error-code">SYS_OVERRIDE::PENDING</div>
+  <div class="loader-text" id="loader-text">🌸 Loading her world...</div>
+  <div class="loader-bar-wrap"><div class="loader-bar" id="loader-bar"></div></div>
 </div>
 
-<!-- ========== PHASE 2: TERMINAL ========== -->
-<div id="phase-terminal">
-  <div class="terminal-window">
-    <div class="terminal-header">
-      <div class="terminal-dot red"></div>
-      <div class="terminal-dot yellow"></div>
-      <div class="terminal-dot green"></div>
-      <div class="terminal-title">RUHI_X_QNR_TERMINAL v2.4.1 — SSH ENCRYPTED</div>
-    </div>
-    <div class="terminal-body" id="terminal-body">
-      <span class="terminal-line terminal-prompt">root@darkweb:~$ <span id="terminal-text"></span><span class="terminal-cursor" id="cursor"></span></span>
-    </div>
-  </div>
+<!-- ══ INTRO TYPING ══ -->
+<div id="intro">
+  <div class="intro-flowers">🌸 💕 🌹 💕 🌸</div>
+  <div class="intro-typing" id="intro-typing"><span class="typing-cursor">|</span></div>
+  <button class="intro-skip" onclick="skipIntro()">skip ✨</button>
 </div>
 
-<!-- ========== PHASE 3: ACCESS GRANTED ========== -->
-<div id="phase-access">
-  <div class="access-title">⚡ SYSTEM ACCESS GRANTED ⚡</div>
-  <div class="access-sub">[ IDENTITY VERIFIED | CLEARANCE LEVEL: PINK ]</div>
-  <button class="enter-btn" id="enter-btn" onclick="enterPortal()">
-    <span>◈ ENTER ◈</span>
+<!-- ══ ENTER SCREEN ══ -->
+<div id="enter-screen">
+  <div class="enter-hearts">💗 🌸 💕 🌸 💗</div>
+  <div class="enter-title">Welcome to her Universe</div>
+  <div class="enter-sub">~ where pink meets purple & chaos ~</div>
+  <button class="btn-enter" onclick="doEnter()">
+    ✨ Enter Her World ✨
   </button>
-</div>
-
-<!-- ========== LOADING SCREEN ========== -->
-<div id="loading-screen">
-  <div class="loading-label" id="loading-label">INITIALIZING AESTHETIC CORE...</div>
-  <div class="loading-bar-container">
-    <div class="loading-bar-fill" id="loading-bar"></div>
+  <div style="font-family:'Dancing Script',cursive;color:rgba(255,180,210,.4);font-size:.85rem;">
+    🌹 {{ p.name }} {{ p.subtitle }} 🌹
   </div>
 </div>
 
-<!-- ========== PHASE 5: BIO PAGE ========== -->
-<div id="phase-bio">
-  <div class="bio-bg-animation">
-    <div class="bio-orb"></div>
-    <div class="bio-orb"></div>
-    <div class="bio-orb"></div>
-  </div>
+<!-- ══ MAIN SITE ══ -->
+<div id="site">
 
-  <div class="bio-content">
-    <!-- Profile Header -->
-    <div class="bio-header">
-      <div class="bio-avatar-container">
-        <div class="avatar-ring-outer"></div>
-        <div class="avatar-ring"></div>
-        <img src="{{ profile.avatar }}" alt="{{ profile.name }}" class="bio-avatar" onerror="this.src='https://via.placeholder.com/160/ff6eb4/ffffff?text=♡'">
-      </div>
-      <div class="bio-name">{{ profile.name }}</div>
-      <div class="bio-tagline">✦ {{ profile.tagline }} ✦</div>
-      <div class="bio-description">{{ profile.bio }}</div>
+  <!-- HERO -->
+  <section class="hero">
+    <span class="crown">👑</span>
 
-      <!-- Social Links -->
-      <div class="social-links">
-        {% if socials.instagram %}
-        <a href="{{ socials.instagram }}" target="_blank" class="social-link" title="Instagram">
-          <i class="fab fa-instagram"></i>
-        </a>
-        {% endif %}
-        {% if socials.twitter %}
-        <a href="{{ socials.twitter }}" target="_blank" class="social-link" title="Twitter">
-          <i class="fab fa-twitter"></i>
-        </a>
-        {% endif %}
-        {% if socials.tiktok %}
-        <a href="{{ socials.tiktok }}" target="_blank" class="social-link" title="TikTok">
-          <i class="fab fa-tiktok"></i>
-        </a>
-        {% endif %}
-        {% if socials.youtube %}
-        <a href="{{ socials.youtube }}" target="_blank" class="social-link" title="YouTube">
-          <i class="fab fa-youtube"></i>
-        </a>
-        {% endif %}
-        {% if socials.spotify %}
-        <a href="{{ socials.spotify }}" target="_blank" class="social-link" title="Spotify">
-          <i class="fab fa-spotify"></i>
-        </a>
-        {% endif %}
-      </div>
+    <div class="avatar-stack">
+      <div class="avatar-glow-ring agr3"></div>
+      <div class="avatar-glow-ring agr2"></div>
+      <div class="avatar-glow-ring agr1"></div>
+      <img src="{{ p.avatar }}" alt="{{ p.name }}" class="avatar-img"
+           onerror="this.src='https://via.placeholder.com/175/ff85b3/ffffff?text=♡'">
     </div>
 
-    <!-- Bio Details -->
-    <div class="section-title">✦ ABOUT ME ✦</div>
+    <div class="hero-name">{{ p.name }}</div>
+    <div class="hero-subtitle">{{ p.subtitle }}</div>
+
+    <div class="hero-tagline">{{ p.tagline }}</div>
+
+    <div class="heart-divider">
+      <div class="heart-line"></div>
+      <div class="heart-center-icon">♡</div>
+      <div class="heart-line"></div>
+    </div>
+
+    <div class="social-row">
+      {% if socials.instagram %}<a href="{{ socials.instagram }}" target="_blank" class="soc-btn" title="Instagram"><i class="fab fa-instagram"></i></a>{% endif %}
+      {% if socials.twitter %}<a href="{{ socials.twitter }}" target="_blank" class="soc-btn" title="Twitter"><i class="fab fa-twitter"></i></a>{% endif %}
+      {% if socials.tiktok %}<a href="{{ socials.tiktok }}" target="_blank" class="soc-btn" title="TikTok"><i class="fab fa-tiktok"></i></a>{% endif %}
+      {% if socials.youtube %}<a href="{{ socials.youtube }}" target="_blank" class="soc-btn" title="YouTube"><i class="fab fa-youtube"></i></a>{% endif %}
+      {% if socials.snapchat %}<a href="{{ socials.snapchat }}" target="_blank" class="soc-btn" title="Snapchat"><i class="fab fa-snapchat"></i></a>{% endif %}
+    </div>
+
+    <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(.85rem,2vw,1.05rem);color:rgba(255,200,220,.65);max-width:460px;line-height:1.8;margin-top:10px;">{{ p.bio }}</p>
+  </section>
+
+  <!-- BIO CARDS -->
+  <div class="bio-section">
+    <div class="section-heading">
+      <h2>✨ Know Her Better ✨</h2>
+      <p>tap a card to unveil a little secret 🌸</p>
+    </div>
     <div class="bio-grid">
-      <div class="bio-card" onclick="handleCardClick('age', this, event)" data-category="age">
-        <div class="card-icon"><i class="fas fa-star-of-life"></i></div>
-        <div class="card-label">Age</div>
-        <div class="card-value">{{ profile.age }}</div>
-        <div class="card-media-indicator"><i class="fas fa-play-circle"></i></div>
-      </div>
-      <div class="bio-card" onclick="handleCardClick('birthday', this, event)" data-category="birthday">
-        <div class="card-icon"><i class="fas fa-birthday-cake"></i></div>
-        <div class="card-label">Birthday</div>
-        <div class="card-value">{{ profile.birthday }}</div>
-        <div class="card-media-indicator"><i class="fas fa-play-circle"></i></div>
-      </div>
-      <div class="bio-card" onclick="handleCardClick('location', this, event)" data-category="location">
-        <div class="card-icon"><i class="fas fa-map-pin"></i></div>
-        <div class="card-label">Location</div>
-        <div class="card-value">{{ profile.location }}</div>
-        <div class="card-media-indicator"><i class="fas fa-play-circle"></i></div>
-      </div>
-      <div class="bio-card" onclick="handleCardClick('zodiac', this, event)" data-category="zodiac">
-        <div class="card-icon"><i class="fas fa-moon"></i></div>
-        <div class="card-label">Zodiac</div>
-        <div class="card-value">{{ profile.zodiac }}</div>
-        <div class="card-media-indicator"><i class="fas fa-play-circle"></i></div>
-      </div>
-      <div class="bio-card" onclick="handleCardClick('hobbies', this, event)" data-category="hobbies">
-        <div class="card-icon"><i class="fas fa-heart"></i></div>
-        <div class="card-label">Hobbies</div>
-        <div class="card-value">{{ profile.hobbies }}</div>
-        <div class="card-media-indicator"><i class="fas fa-play-circle"></i></div>
-      </div>
-      <div class="bio-card" onclick="handleCardClick('music', this, event)" data-category="music">
-        <div class="card-icon"><i class="fas fa-music"></i></div>
-        <div class="card-label">Music Taste</div>
-        <div class="card-value">{{ profile.music }}</div>
-        <div class="card-media-indicator"><i class="fas fa-play-circle"></i></div>
-      </div>
-      <div class="bio-card" onclick="handleCardClick('vibe', this, event)" data-category="vibe">
-        <div class="card-icon"><i class="fas fa-magic"></i></div>
-        <div class="card-label">My Vibe</div>
-        <div class="card-value">{{ profile.vibe }}</div>
-        <div class="card-media-indicator"><i class="fas fa-play-circle"></i></div>
-      </div>
-      <div class="bio-card quote-card" onclick="handleCardClick('quote', this, event)" data-category="quote">
-        <div class="card-icon"><i class="fas fa-quote-left"></i></div>
-        <div class="card-label">My Quote</div>
-        <div class="card-value">{{ profile.quote }}</div>
-        <div class="card-media-indicator"><i class="fas fa-play-circle"></i></div>
-      </div>
-    </div>
 
-    <!-- Footer -->
-    <div style="text-align:center; font-family:'Poppins',sans-serif; color:rgba(255,182,193,0.4); font-size:0.75rem; letter-spacing:0.2em;">
-      ✦ made with love & dark energy ✦
+      <div class="bio-card" onclick="cardClick('age',this,event)" style="animation-delay:.05s">
+        <div class="card-top">
+          <div class="card-icon-wrap">✨</div>
+          <div class="card-label">Age</div>
+        </div>
+        <div class="card-value">{{ p.age }}</div>
+        <div class="card-play-hint"><i class="fas fa-play"></i> tap</div>
+      </div>
+
+      <div class="bio-card" onclick="cardClick('birthday',this,event)" style="animation-delay:.1s">
+        <div class="card-top">
+          <div class="card-icon-wrap">🎂</div>
+          <div class="card-label">Birthday</div>
+        </div>
+        <div class="card-value">{{ p.birthday }}</div>
+        <div class="card-play-hint"><i class="fas fa-play"></i> tap</div>
+      </div>
+
+      <div class="bio-card" onclick="cardClick('location',this,event)" style="animation-delay:.15s">
+        <div class="card-top">
+          <div class="card-icon-wrap">🌍</div>
+          <div class="card-label">Location</div>
+        </div>
+        <div class="card-value">{{ p.location }}</div>
+        <div class="card-play-hint"><i class="fas fa-play"></i> tap</div>
+      </div>
+
+      <div class="bio-card" onclick="cardClick('zodiac',this,event)" style="animation-delay:.2s">
+        <div class="card-top">
+          <div class="card-icon-wrap">🌙</div>
+          <div class="card-label">Zodiac</div>
+        </div>
+        <div class="card-value">{{ p.zodiac }}</div>
+        <div class="card-play-hint"><i class="fas fa-play"></i> tap</div>
+      </div>
+
+      <div class="bio-card" onclick="cardClick('hobbies',this,event)" style="animation-delay:.25s">
+        <div class="card-top">
+          <div class="card-icon-wrap">🎨</div>
+          <div class="card-label">Hobbies</div>
+        </div>
+        <div class="card-value">{{ p.hobbies }}</div>
+        <div class="card-play-hint"><i class="fas fa-play"></i> tap</div>
+      </div>
+
+      <div class="bio-card" onclick="cardClick('music',this,event)" style="animation-delay:.3s">
+        <div class="card-top">
+          <div class="card-icon-wrap">🎵</div>
+          <div class="card-label">Music</div>
+        </div>
+        <div class="card-value">{{ p.music }}</div>
+        <div class="card-play-hint"><i class="fas fa-play"></i> tap</div>
+      </div>
+
+      <div class="bio-card" onclick="cardClick('vibe',this,event)" style="animation-delay:.35s">
+        <div class="card-top">
+          <div class="card-icon-wrap">🌙</div>
+          <div class="card-label">My Vibe</div>
+        </div>
+        <div class="card-value">{{ p.vibe }}</div>
+        <div class="card-play-hint"><i class="fas fa-play"></i> tap</div>
+      </div>
+
+      <div class="bio-card" onclick="cardClick('bestie',this,event)" style="animation-delay:.4s">
+        <div class="card-top">
+          <div class="card-icon-wrap">💗</div>
+          <div class="card-label">Bestie</div>
+        </div>
+        <div class="card-value">{{ p.bestie }}</div>
+        <div class="card-play-hint"><i class="fas fa-play"></i> tap</div>
+      </div>
+
+      <div class="bio-card card-quote" onclick="cardClick('quote',this,event)" style="animation-delay:.45s">
+        <div class="card-top" style="justify-content:center;">
+          <div class="card-icon-wrap">🦋</div>
+          <div class="card-label">Her Quote</div>
+        </div>
+        <div class="card-value">{{ p.quote }}</div>
+        <div class="card-play-hint"><i class="fas fa-play"></i> tap</div>
+      </div>
+
     </div>
+  </div>
+
+  <!-- Footer -->
+  <div style="text-align:center;padding:20px 20px 60px;font-family:'Dancing Script',cursive;color:rgba(255,130,180,.3);font-size:1rem;">
+    made with 💗 & a little bit of magic
   </div>
 </div>
 
-<!-- ========== MEDIA POPUP ========== -->
-<div id="media-popup">
-  <div class="popup-content">
-    <button class="popup-close" onclick="closePopup()">×</button>
-    <div class="popup-title" id="popup-title">♡ PLAYING</div>
+<!-- ══ MEDIA POPUP ══ -->
+<div id="popup">
+  <div class="popup-box">
+    <button class="popup-close" onclick="closePopup()">✕</button>
+    <div class="popup-title" id="popup-title">💕 Playing...</div>
     <div class="popup-media" id="popup-media"></div>
   </div>
 </div>
 
-<!-- Music Control -->
-<div class="music-control" id="music-control" onclick="toggleBgMusic()">
-  <i class="fas fa-music music-icon" id="music-icon"></i>
-  <span id="music-label">PAUSE</span>
+<!-- Music Widget -->
+<div id="music-widget" onclick="toggleMusic()">
+  <i class="fas fa-compact-disc mw-icon" id="mw-icon"></i>
+  <div class="mw-bars" id="mw-bars">
+    <div class="mw-bar"></div>
+    <div class="mw-bar"></div>
+    <div class="mw-bar"></div>
+    <div class="mw-bar"></div>
+    <div class="mw-bar"></div>
+  </div>
+  <div class="mw-text" id="mw-text">MUSIC</div>
 </div>
 
-<!-- Background Audio -->
-<audio id="bg-music" loop>
-  <source src="{{ background_music }}" type="audio/mpeg">
+<audio id="bg-audio" loop>
+  {% if bg_music %}<source src="{{ bg_music }}">{% endif %}
 </audio>
 
 <script>
-// ============================================================
-// GLOBAL STATE
-// ============================================================
-const mediaMap = {{ media_map | tojson }};
-let bgMusicPlaying = false;
-let activeCardEl = null;
-let currentAudioEl = null;
-const terminalLines = {{ terminal_lines | tojson }};
+// ════════════════════════════════
+// DATA
+// ════════════════════════════════
+const MEDIA = {{ media_map | tojson }};
+const INTRO_LINES = {{ intro_lines | tojson }};
+const HAS_MUSIC = {{ 'true' if bg_music else 'false' }};
+const CARD_LABELS = {
+  age:'✨ Age Reveal',birthday:'🎂 Birthday Surprise',
+  location:'📍 Her Location',zodiac:'🌙 Zodiac Energy',
+  hobbies:'🎨 Her Hobbies',music:'🎵 Music Taste',
+  vibe:'🌸 Her Vibe',bestie:'💗 Bestie Love',quote:'🦋 Her Quote'
+};
 
-// ============================================================
-// PHASE SEQUENCER
-// ============================================================
-window.addEventListener('load', () => {
-  // Phase 1 auto-ends at 3s (CSS animation)
-  // Phase 2 begins at 3.5s
-  setTimeout(startTerminal, 3600);
+// ════════════════════════════════
+// CURSOR
+// ════════════════════════════════
+const cur = document.getElementById('cursor');
+const curR = document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX;my=e.clientY;
+  cur.style.left=mx+'px';cur.style.top=my+'px';
+  // Trail
+  if(document.getElementById('site').classList.contains('show') && Math.random()>.7){
+    const t=document.createElement('div');
+    t.className='trail';
+    const emj=['✨','💕','🌸','⭐','♡'];
+    t.textContent=emj[Math.floor(Math.random()*emj.length)];
+    t.style.cssText=`left:${mx}px;top:${my}px;font-size:${.6+Math.random()*.6}rem;animation-duration:${.5+Math.random()*.4}s;`;
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(),900);
+  }
+});
+setInterval(()=>{
+  rx+=(mx-rx)*.1;ry+=(my-ry)*.1;
+  curR.style.left=rx+'px';curR.style.top=ry+'px';
+},16);
+
+// Click ripple
+document.addEventListener('click',e=>{
+  const r=document.createElement('div');
+  r.className='ripple';
+  r.style.cssText=`left:${e.clientX}px;top:${e.clientY}px;width:60px;height:60px;`;
+  document.body.appendChild(r);
+  setTimeout(()=>r.remove(),700);
 });
 
-// ============================================================
-// PHASE 2: TERMINAL TYPING
-// ============================================================
-async function startTerminal() {
-  const terminalBody = document.getElementById('terminal-body');
-  const firstLine = document.getElementById('terminal-text');
-  const cursor = document.getElementById('cursor');
-
-  // Type terminal lines one by one
-  for (let i = 0; i < terminalLines.length; i++) {
-    const line = terminalLines[i];
-    let displayEl;
-
-    if (i === 0) {
-      displayEl = firstLine;
-    } else {
-      // Create new line
-      const lineSpan = document.createElement('div');
-      lineSpan.style.cssText = `
-        font-family: 'Share Tech Mono', monospace;
-        font-size: clamp(0.7rem, 2vw, 0.9rem);
-        color: ${getLineColor(line)};
-        line-height: 1.8;
-        opacity: 0;
-        animation: lineAppear 0.1s forwards;
-      `;
-      terminalBody.insertBefore(lineSpan, cursor.parentElement.nextSibling || null);
-      terminalBody.appendChild(lineSpan);
-      displayEl = lineSpan;
-    }
-
-    // Type character by character
-    await typeText(displayEl, line, 35);
-
-    // Pause between lines
-    await sleep(200);
-  }
-
-  // Transition to Phase 3
-  await sleep(500);
-  transitionToAccess();
-}
-
-function getLineColor(line) {
-  if (line.includes('Bypassing') || line.includes('ERROR')) return '#ff6eb4';
-  if (line.includes('Welcome') || line.includes('ONLINE') || line.includes('ACTIVE')) return '#27c93f';
-  if (line.includes('Accessing') || line.includes('Loading')) return '#00ffff';
-  return '#00ff41';
-}
-
-function typeText(element, text, speed) {
-  return new Promise(resolve => {
-    let i = 0;
-    element.style.opacity = '1';
-    const interval = setInterval(() => {
-      element.textContent += text[i];
-      i++;
-      // Scroll terminal to bottom
-      const term = document.getElementById('phase-terminal');
-      if (term) term.querySelector('.terminal-window').scrollTop = 999;
-      if (i >= text.length) {
-        clearInterval(interval);
-        resolve();
-      }
-    }, speed);
-  });
-}
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-// ============================================================
-// PHASE 3: ACCESS GRANTED
-// ============================================================
-function transitionToAccess() {
-  const terminal = document.getElementById('phase-terminal');
-  const access = document.getElementById('phase-access');
-
-  // Flash white
-  terminal.style.transition = 'opacity 0.3s';
-  terminal.style.opacity = '0';
-
-  setTimeout(() => {
-    terminal.style.display = 'none';
-    access.classList.add('active');
-    // Animate access page in
-    access.animate([
-      { opacity: 0, filter: 'brightness(10)' },
-      { opacity: 1, filter: 'brightness(1)' }
-    ], { duration: 600, fill: 'forwards' });
-  }, 300);
-}
-
-// ============================================================
-// PHASE 4: ENTER / VORTEX
-// ============================================================
-function enterPortal() {
-  const access = document.getElementById('phase-access');
-  const loading = document.getElementById('loading-screen');
-  const bgMusic = document.getElementById('bg-music');
-
-  // Start background music immediately
-  bgMusic.volume = 0.5;
-  bgMusic.play().then(() => {
-    bgMusicPlaying = true;
-  }).catch(e => console.log('Audio autoplay blocked:', e));
-
-  // Show loading screen
-  access.style.transition = 'opacity 0.5s';
-  access.style.opacity = '0';
-  setTimeout(() => {
-    access.style.display = 'none';
-    loading.style.display = 'flex';
-    runLoadingBar();
-  }, 500);
-}
-
-const loadingMessages = [
-  'INITIALIZING AESTHETIC CORE...',
-  'LOADING PERSONALITY MATRIX...',
-  'CALIBRATING PINK FREQUENCIES...',
-  'RENDERING GLASSOMORPHISM...',
-  'DEPLOYING FLOATING HEARTS...',
-  'UNLOCKING IDENTITY DATABASE...',
-  'AESTHETIC CORE: READY ✓',
-  'WELCOME. ♡'
-];
-
-async function runLoadingBar() {
-  const bar = document.getElementById('loading-bar');
-  const label = document.getElementById('loading-label');
-  let progress = 0;
-
-  const interval = setInterval(async () => {
-    progress += Math.random() * 4 + 1;
-    if (progress > 100) progress = 100;
-    bar.style.width = progress + '%';
-
-    const msgIndex = Math.floor((progress / 100) * loadingMessages.length);
-    if (msgIndex < loadingMessages.length) {
-      label.textContent = loadingMessages[Math.min(msgIndex, loadingMessages.length - 1)];
-    }
-
-    if (progress >= 100) {
-      clearInterval(interval);
-      await sleep(800);
-      startVortex();
-    }
-  }, 60);
-}
-
-function startVortex() {
-  const loading = document.getElementById('loading-screen');
-
-  loading.style.transition = 'opacity 0.3s';
-  loading.style.opacity = '0';
-
-  setTimeout(() => {
-    loading.style.display = 'none';
-    // Vortex: all content spins into center, then bio reveals
-    triggerVortexAnimation();
-  }, 400);
-}
-
-function triggerVortexAnimation() {
-  const vortexEl = document.createElement('div');
-  vortexEl.style.cssText = `
-    position: fixed; inset: 0; z-index: 600;
-    background: radial-gradient(circle at 50% 50%, #ff6eb4 0%, #9c27b0 30%, #000 70%);
-    display: flex; align-items: center; justify-content: center;
-    animation: vortexAppear 1.5s ease forwards;
+// ════════════════════════════════
+// PARTICLES
+// ════════════════════════════════
+const EMOJIS=['🌸','💕','✨','🌹','💗','⭐','🦋','💜','🌙','💖','🌺','✿','♡','💫','🎀'];
+function makeParticle(){
+  const p=document.createElement('div');
+  p.className='fp';
+  p.textContent=EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
+  const size=.5+Math.random()*1.2;
+  const dur=8+Math.random()*15;
+  p.style.cssText=`
+    left:${Math.random()*100}vw;
+    font-size:${size}rem;
+    animation-duration:${dur}s;
+    animation-delay:${Math.random()*dur}s;
+    filter:drop-shadow(0 0 6px rgba(255,130,180,.6));
   `;
+  document.getElementById('particles').appendChild(p);
+  setTimeout(()=>p.remove(),(dur+5)*1000);
+}
+for(let i=0;i<30;i++) setTimeout(makeParticle,i*200);
+setInterval(makeParticle,1200);
 
-  // Create spinning vortex rings
-  for (let r = 0; r < 6; r++) {
-    const ring = document.createElement('div');
-    const size = 60 + r * 80;
-    ring.style.cssText = `
-      position: absolute;
-      width: ${size}px; height: ${size}px;
-      border: 2px solid rgba(255,110,180,${0.8 - r * 0.12});
-      border-radius: 50%;
-      animation: vortexRing ${0.8 + r * 0.15}s linear infinite;
-      box-shadow: 0 0 ${10 + r * 5}px rgba(255,110,180,0.5);
-    `;
-    vortexEl.appendChild(ring);
+// ════════════════════════════════
+// LOADER
+// ════════════════════════════════
+const loaderMsgs=['🌸 Loading her world...','💕 Sprinkling love...','✨ Waking up magic...','🌹 Almost ready...','💗 Here she comes!'];
+let lp=0;
+const lb=document.getElementById('loader-bar');
+const lt=document.getElementById('loader-text');
+let lw=0;
+const lInt=setInterval(()=>{
+  lw+=Math.random()*3+1.5;
+  if(lw>100)lw=100;
+  lb.style.width=lw+'%';
+  const mi=Math.floor((lw/100)*loaderMsgs.length);
+  lt.textContent=loaderMsgs[Math.min(mi,loaderMsgs.length-1)];
+  if(lw>=100){
+    clearInterval(lInt);
+    setTimeout(()=>{
+      document.getElementById('loader').style.transition='opacity .6s';
+      document.getElementById('loader').style.opacity='0';
+      setTimeout(startIntro,700);
+    },400);
   }
+},80);
 
-  const style = document.createElement('style');
-  style.textContent = `
-    @keyframes vortexAppear {
-      0% { transform: scale(0); opacity: 0; }
-      30% { transform: scale(1); opacity: 1; }
-      70% { transform: scale(1); opacity: 1; }
-      100% { transform: scale(0); opacity: 0; }
-    }
-    @keyframes vortexRing {
-      from { transform: rotate(0deg) scale(1); opacity: 1; }
-      to { transform: rotate(360deg) scale(0.1); opacity: 0; }
-    }
-  `;
-  document.head.appendChild(style);
-  document.body.appendChild(vortexEl);
-
-  // Reveal bio after vortex
-  setTimeout(() => {
-    vortexEl.remove();
-    revealBio();
-  }, 2000);
+// ════════════════════════════════
+// INTRO TYPING
+// ════════════════════════════════
+let introSkipped=false;
+function startIntro(){
+  document.getElementById('loader').style.display='none';
+  const intro=document.getElementById('intro');
+  intro.style.display='flex';
+  typeIntroLines(0);
 }
 
-// ============================================================
-// PHASE 5: BIO PAGE REVEAL
-// ============================================================
-function revealBio() {
-  const bio = document.getElementById('phase-bio');
-  const musicControl = document.getElementById('music-control');
-
-  bio.classList.add('active');
-  musicControl.classList.add('show');
-
-  // Create floating hearts
-  createFloatingElements();
-
-  // Add sparkle on cursor move
-  document.addEventListener('mousemove', createSparkle);
-  document.addEventListener('click', (e) => {
-    if (e.target.closest('#phase-bio') && !e.target.closest('.bio-card')) {
-      createSparkleAt(e.clientX, e.clientY);
-    }
+async function typeIntroLines(idx){
+  if(introSkipped)return;
+  if(idx>=INTRO_LINES.length){
+    await sleep(500);
+    if(!introSkipped) showEnterScreen();
+    return;
+  }
+  const el=document.getElementById('intro-typing');
+  const line=INTRO_LINES[idx];
+  el.innerHTML='<span class="typing-cursor">|</span>';
+  let i=0;
+  await new Promise(res=>{
+    const t=setInterval(()=>{
+      if(introSkipped){clearInterval(t);res();return;}
+      el.innerHTML=line.slice(0,++i)+'<span class="typing-cursor">|</span>';
+      if(i>=line.length){clearInterval(t);setTimeout(res,700);}
+    },45);
   });
+  await sleep(300);
+  typeIntroLines(idx+1);
 }
 
-// ============================================================
-// FLOATING ELEMENTS
-// ============================================================
-const particleEmojis = ['♡', '✦', '★', '✿', '❋', '✺', '♪', '✨', '💕', '🌸'];
-const heartEmojis = ['♡', '💕', '💗', '🌸', '✨'];
+function skipIntro(){
+  introSkipped=true;
+  document.getElementById('intro').classList.add('hide');
+  setTimeout(showEnterScreen,500);
+}
 
-function createFloatingElements() {
-  // Create particles
-  for (let i = 0; i < 20; i++) {
-    setTimeout(() => createParticle(), i * 300);
+function showEnterScreen(){
+  document.getElementById('intro').classList.add('hide');
+  setTimeout(()=>{
+    document.getElementById('intro').style.display='none';
+    document.getElementById('enter-screen').classList.add('show');
+  },400);
+}
+
+// ════════════════════════════════
+// ENTER
+// ════════════════════════════════
+function doEnter(){
+  // Start music
+  if(HAS_MUSIC){
+    const a=document.getElementById('bg-audio');
+    a.volume=.4;
+    a.play().catch(()=>{});
+    isMusicOn=true;
+    document.getElementById('music-widget').classList.add('show');
   }
-  setInterval(createParticle, 1500);
-
-  // Create hearts
-  for (let i = 0; i < 10; i++) {
-    setTimeout(() => createHeart(), i * 500);
-  }
-  setInterval(createHeart, 2000);
+  // Animate enter screen out
+  const es=document.getElementById('enter-screen');
+  es.style.transition='opacity .8s ease,transform .8s ease';
+  es.style.opacity='0';
+  es.style.transform='scale(1.1)';
+  setTimeout(()=>{
+    es.style.display='none';
+    revealSite();
+  },800);
 }
 
-function createParticle() {
-  const p = document.createElement('div');
-  p.className = 'particle';
-  p.textContent = particleEmojis[Math.floor(Math.random() * particleEmojis.length)];
-  p.style.left = Math.random() * 100 + 'vw';
-  p.style.animationDuration = (8 + Math.random() * 10) + 's';
-  p.style.animationDelay = (Math.random() * 2) + 's';
-  p.style.fontSize = (0.6 + Math.random() * 0.8) + 'rem';
-  p.style.opacity = 0.3 + Math.random() * 0.4;
-  document.getElementById('phase-bio').appendChild(p);
-  setTimeout(() => p.remove(), 20000);
+function revealSite(){
+  const site=document.getElementById('site');
+  site.classList.add('show');
 }
 
-function createHeart() {
-  const h = document.createElement('div');
-  h.className = 'floating-heart';
-  h.textContent = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
-  h.style.left = (5 + Math.random() * 90) + 'vw';
-  h.style.animationDuration = (6 + Math.random() * 8) + 's';
-  h.style.animationDelay = '0s';
-  document.getElementById('phase-bio').appendChild(h);
-  setTimeout(() => h.remove(), 16000);
+// ════════════════════════════════
+// BIO CARDS
+// ════════════════════════════════
+let activeCard=null,activeAudio=null;
+
+function cardClick(cat,el,ev){
+  // Sparkle burst at click
+  burst(ev.clientX,ev.clientY);
+
+  if(activeCard && activeCard!==el) activeCard.classList.remove('playing');
+
+  const url=MEDIA[cat]||'';
+  showPopup(cat,url,el);
 }
 
-function createSparkle(e) {
-  if (Math.random() > 0.92) {
-    createSparkleAt(e.clientX, e.clientY);
-  }
-}
+function showPopup(cat,url,cardEl){
+  const pop=document.getElementById('popup');
+  const title=document.getElementById('popup-title');
+  const media=document.getElementById('popup-media');
 
-function createSparkleAt(x, y) {
-  const sparkles = ['✨', '⭐', '💫', '✦', '★'];
-  const s = document.createElement('div');
-  s.className = 'sparkle';
-  s.textContent = sparkles[Math.floor(Math.random() * sparkles.length)];
-  s.style.left = x + 'px';
-  s.style.top = y + 'px';
-  document.body.appendChild(s);
-  setTimeout(() => s.remove(), 800);
-}
+  title.textContent=CARD_LABELS[cat]||('💕 '+cat);
 
-// ============================================================
-// BIO CARD INTERACTIONS
-// ============================================================
-function handleCardClick(category, cardEl, event) {
-  // Create sparkle effect at click position
-  createSparkleAt(event.clientX, event.clientY);
+  if(activeAudio){activeAudio.pause();activeAudio=null;}
 
-  // Remove playing class from previous card
-  if (activeCardEl && activeCardEl !== cardEl) {
-    activeCardEl.classList.remove('playing');
-  }
-
-  const mediaUrl = mediaMap[category];
-
-  if (!mediaUrl) {
-    // Show no-media popup
-    showPopup(category, null);
+  if(!url){
+    media.innerHTML=`
+      <div class="no-media">
+        <span class="nm-icon">🌸</span>
+        No media assigned yet~<br>
+        <small style="opacity:.5">Add one in the admin panel 💕</small>
+      </div>`;
+  } else if(url.includes('youtube.com')||url.includes('youtu.be')){
+    const vid=ytId(url);
+    media.innerHTML=`<iframe src="https://www.youtube.com/embed/${vid}?autoplay=1&rel=0" allow="autoplay;encrypted-media" allowfullscreen></iframe>`;
+  } else if(/\.(mp4|webm|mov)(\?|$)/i.test(url)){
+    media.innerHTML=`<video controls autoplay><source src="${url}"></video>`;
   } else {
-    activeCardEl = cardEl;
+    media.innerHTML=`
+      <div style="text-align:center;padding:20px 0;">
+        <div style="font-size:2.5rem;margin-bottom:14px;animation:heartBeat 1s ease-in-out infinite;">🎵</div>
+        <audio controls autoplay id="popAudio"><source src="${url}"></audio>
+      </div>`;
+    setTimeout(()=>{const a=document.getElementById('popAudio');if(a)activeAudio=a;},100);
+  }
+
+  pop.classList.add('show');
+  if(cardEl){
+    if(activeCard) activeCard.classList.remove('playing');
+    activeCard=cardEl;
     cardEl.classList.add('playing');
-    showPopup(category, mediaUrl);
   }
 }
 
-function showPopup(category, mediaUrl) {
-  const popup = document.getElementById('media-popup');
-  const popupTitle = document.getElementById('popup-title');
-  const popupMedia = document.getElementById('popup-media');
+function closePopup(){
+  document.getElementById('popup').classList.remove('show');
+  if(activeAudio){activeAudio.pause();activeAudio=null;}
+  if(activeCard){activeCard.classList.remove('playing');activeCard=null;}
+}
+document.getElementById('popup').addEventListener('click',function(e){
+  if(e.target===this) closePopup();
+});
 
-  const categoryLabels = {
-    age: 'AGE REVEAL',
-    birthday: 'BIRTHDAY MESSAGE',
-    location: 'LOCATION VIBES',
-    zodiac: 'ZODIAC ENERGY',
-    hobbies: 'HOBBY SHOWCASE',
-    music: 'MUSIC TASTE',
-    vibe: 'MY VIBE',
-    quote: 'QUOTE OF LIFE'
-  };
+function ytId(url){
+  const m=url.match(/(?:v=|\/embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return m?m[1]:'';
+}
 
-  popupTitle.textContent = '♡ ' + (categoryLabels[category] || category.toUpperCase());
-
-  // Stop previous media
-  if (currentAudioEl) {
-    currentAudioEl.pause();
-    currentAudioEl = null;
-  }
-
-  if (!mediaUrl) {
-    popupMedia.innerHTML = `
-      <div class="popup-no-media">
-        <i class="fas fa-compact-disc" style="font-size:2rem; color:rgba(255,110,180,0.4); margin-bottom:10px; display:block;"></i>
-        No media assigned for this card yet.<br>
-        <small style="opacity:0.5;">Configure in the admin panel ♡</small>
-      </div>
+// ════════════════════════════════
+// SPARKLE BURST
+// ════════════════════════════════
+const B_EMOJIS=['✨','💕','🌸','⭐','💗','🦋','♡'];
+function burst(x,y){
+  for(let i=0;i<12;i++){
+    const s=document.createElement('div');
+    const angle=Math.random()*360;
+    const dist=40+Math.random()*80;
+    const rad=angle*Math.PI/180;
+    const tx=Math.cos(rad)*dist;
+    const ty=Math.sin(rad)*dist;
+    s.textContent=B_EMOJIS[Math.floor(Math.random()*B_EMOJIS.length)];
+    s.style.cssText=`
+      position:fixed;left:${x}px;top:${y}px;
+      pointer-events:none;z-index:99999;
+      font-size:${.7+Math.random()*.8}rem;
+      transform:translate(-50%,-50%);
+      animation:burstAnim .8s ease forwards;
+      --tx:${tx}px;--ty:${ty}px;
     `;
+    document.body.appendChild(s);
+    setTimeout(()=>s.remove(),900);
+  }
+}
+
+// Inject burst keyframes
+const bStyle=document.createElement('style');
+bStyle.textContent=`
+@keyframes burstAnim{
+  0%{opacity:1;transform:translate(-50%,-50%) scale(0);}
+  40%{opacity:1;transform:translate(calc(-50% + var(--tx)*.4),calc(-50% + var(--ty)*.4)) scale(1.2);}
+  100%{opacity:0;transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) scale(0);}
+}`;
+document.head.appendChild(bStyle);
+
+// ════════════════════════════════
+// MUSIC WIDGET
+// ════════════════════════════════
+let isMusicOn=false;
+function toggleMusic(){
+  const a=document.getElementById('bg-audio');
+  const icon=document.getElementById('mw-icon');
+  const bars=document.getElementById('mw-bars');
+  const txt=document.getElementById('mw-text');
+  if(isMusicOn){
+    a.pause();isMusicOn=false;
+    icon.classList.add('paused');
+    bars.style.opacity='.3';
+    txt.textContent='PAUSED';
   } else {
-    const isVideo = /\.(mp4|webm|ogg|mov)(\?|$)/i.test(mediaUrl) || mediaUrl.includes('youtube') || mediaUrl.includes('vimeo');
-
-    if (mediaUrl.includes('youtube')) {
-      const videoId = extractYouTubeId(mediaUrl);
-      popupMedia.innerHTML = `
-        <iframe width="100%" height="250" 
-          src="https://www.youtube.com/embed/${videoId}?autoplay=1" 
-          frameborder="0" allow="autoplay; encrypted-media" allowfullscreen
-          style="border-radius:10px;">
-        </iframe>
-      `;
-    } else if (isVideo) {
-      popupMedia.innerHTML = `
-        <video controls autoplay class="popup-media" style="max-height:300px;">
-          <source src="${mediaUrl}">
-          Your browser doesn't support video.
-        </video>
-      `;
-    } else {
-      // Audio
-      popupMedia.innerHTML = `
-        <div style="padding:20px; text-align:center;">
-          <div style="font-size:3rem; margin-bottom:15px; animation: musicBounce 0.5s ease infinite alternate;">🎵</div>
-          <audio controls autoplay style="width:100%;" id="popup-audio">
-            <source src="${mediaUrl}">
-            Your browser doesn't support audio.
-          </audio>
-        </div>
-      `;
-      currentAudioEl = document.getElementById('popup-audio');
-    }
-  }
-
-  popup.classList.add('active');
-}
-
-function closePopup() {
-  const popup = document.getElementById('media-popup');
-  popup.classList.remove('active');
-
-  if (currentAudioEl) {
-    currentAudioEl.pause();
-    currentAudioEl = null;
-  }
-
-  if (activeCardEl) {
-    activeCardEl.classList.remove('playing');
-    activeCardEl = null;
+    a.play().catch(()=>{});isMusicOn=true;
+    icon.classList.remove('paused');
+    bars.style.opacity='1';
+    txt.textContent='MUSIC';
   }
 }
 
-function extractYouTubeId(url) {
-  const match = url.match(/(?:v=|\/embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-  return match ? match[1] : '';
-}
-
-// Close popup on outside click
-document.getElementById('media-popup').addEventListener('click', function(e) {
-  if (e.target === this) closePopup();
+// Keyboard
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') closePopup();
+  if(e.key.toLowerCase()==='m' && document.getElementById('site').classList.contains('show')) toggleMusic();
 });
 
-// ============================================================
-// BACKGROUND MUSIC CONTROL
-// ============================================================
-function toggleBgMusic() {
-  const bgMusic = document.getElementById('bg-music');
-  const icon = document.getElementById('music-icon');
-  const label = document.getElementById('music-label');
-
-  if (bgMusicPlaying) {
-    bgMusic.pause();
-    bgMusicPlaying = false;
-    icon.className = 'fas fa-volume-mute';
-    label.textContent = 'PLAY';
-  } else {
-    bgMusic.play();
-    bgMusicPlaying = true;
-    icon.className = 'fas fa-music music-icon';
-    label.textContent = 'PAUSE';
-  }
-}
-
-// Keyboard shortcut
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closePopup();
-  if (e.key === 'm' || e.key === 'M') {
-    if (document.getElementById('music-control').classList.contains('show')) {
-      toggleBgMusic();
-    }
-  }
-});
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 </script>
 </body>
 </html>
 """
 
-# ============================================================
-# ADMIN TEMPLATE
-# ============================================================
-
-ADMIN_LOGIN_TEMPLATE = """
-<!DOCTYPE html>
+# ══════════════════════════════════════════════
+#  ADMIN LOGIN
+# ══════════════════════════════════════════════
+ADMIN_LOGIN = """<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Login | RUHI X QNR</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Admin Login 🌸</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&family=Dancing+Script:wght@600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-  min-height: 100vh;
-  background: #0a0a0a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Orbitron', monospace;
-  background-image:
-    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,65,0.03) 2px, rgba(0,255,65,0.03) 4px);
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  min-height:100vh;
+  background:radial-gradient(ellipse at 20% 30%,rgba(185,79,204,.3),transparent 50%),
+             radial-gradient(ellipse at 80% 70%,rgba(255,77,141,.25),transparent 50%),
+             linear-gradient(135deg,#0d0015,#1a0020,#0d0015);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Poppins',sans-serif;
+  min-height:100vh;
 }
-.login-card {
-  background: rgba(0,20,0,0.9);
-  border: 1px solid #00ff41;
-  border-radius: 8px;
-  padding: 40px;
-  width: min(400px, 90vw);
-  box-shadow: 0 0 60px rgba(0,255,65,0.2);
+.card{
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,130,180,.25);
+  border-radius:28px;padding:50px 40px;
+  width:min(400px,90vw);
+  backdrop-filter:blur(20px);
+  box-shadow:0 0 80px rgba(255,77,141,.15),0 0 150px rgba(185,79,204,.1);
+  text-align:center;
 }
-.login-title {
-  font-size: 1.2rem;
-  color: #00ff41;
-  letter-spacing: 0.3em;
-  margin-bottom: 8px;
-  text-align: center;
+.card-icon{font-size:3rem;margin-bottom:15px;display:block;animation:iconFloat 3s ease-in-out infinite;}
+@keyframes iconFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+h1{
+  font-family:'Playfair Display',serif;font-style:italic;
+  font-size:1.8rem;font-weight:700;margin-bottom:6px;
+  background:linear-gradient(135deg,#ff85b3,#d17fe8,#ffd700);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
-.login-sub {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
-  color: rgba(0,255,65,0.5);
-  text-align: center;
-  letter-spacing: 0.2em;
-  margin-bottom: 30px;
+.sub{
+  font-family:'Dancing Script',cursive;font-size:1rem;
+  color:rgba(255,150,190,.5);margin-bottom:35px;
 }
-.form-group { margin-bottom: 20px; }
-label {
-  display: block;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.75rem;
-  color: rgba(0,255,65,0.7);
-  letter-spacing: 0.2em;
-  margin-bottom: 8px;
+.inp-wrap{position:relative;margin-bottom:20px;}
+.inp-wrap i{
+  position:absolute;left:16px;top:50%;transform:translateY(-50%);
+  color:rgba(255,130,180,.5);font-size:.85rem;
 }
-input[type=password] {
-  width: 100%;
-  background: rgba(0,40,0,0.8);
-  border: 1px solid rgba(0,255,65,0.3);
-  border-radius: 4px;
-  padding: 12px 16px;
-  color: #00ff41;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.9rem;
-  outline: none;
-  transition: border-color 0.3s;
+input[type=password]{
+  width:100%;padding:14px 16px 14px 44px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,130,180,.2);border-radius:14px;
+  color:#fff;font-family:'Poppins',sans-serif;font-size:.9rem;outline:none;
+  transition:all .3s;
 }
-input[type=password]:focus { border-color: #00ff41; box-shadow: 0 0 10px rgba(0,255,65,0.2); }
-.login-btn {
-  width: 100%;
-  padding: 14px;
-  background: transparent;
-  border: 1px solid #00ff41;
-  color: #00ff41;
-  font-family: 'Orbitron', monospace;
-  font-size: 0.85rem;
-  letter-spacing: 0.3em;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.3s;
+input[type=password]:focus{border-color:rgba(255,77,141,.6);background:rgba(255,255,255,.09);box-shadow:0 0 0 3px rgba(255,77,141,.1);}
+input::placeholder{color:rgba(255,150,190,.3);}
+.btn{
+  width:100%;padding:14px;border:none;border-radius:14px;
+  background:linear-gradient(135deg,#ff4d8d,#b94fcc,#e8305a);
+  background-size:300%;animation:btnG 3s ease infinite;
+  color:#fff;font-family:'Poppins',sans-serif;font-size:.95rem;font-weight:600;
+  cursor:pointer;letter-spacing:.05em;
+  transition:transform .2s,box-shadow .2s;
+  box-shadow:0 8px 30px rgba(255,77,141,.35);
 }
-.login-btn:hover { background: rgba(0,255,65,0.1); box-shadow: 0 0 20px rgba(0,255,65,0.3); }
-.error-msg {
-  background: rgba(255,0,0,0.1);
-  border: 1px solid rgba(255,0,0,0.3);
-  color: #ff4444;
-  padding: 10px;
-  border-radius: 4px;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.75rem;
-  text-align: center;
-  margin-bottom: 20px;
-  letter-spacing: 0.1em;
+.btn:hover{transform:translateY(-3px);box-shadow:0 15px 40px rgba(255,77,141,.55);}
+@keyframes btnG{0%,100%{background-position:0%;}50%{background-position:100%;}}
+.err{
+  background:rgba(255,50,80,.1);border:1px solid rgba(255,50,80,.25);
+  border-radius:10px;padding:12px 16px;color:#ff7090;
+  font-size:.82rem;margin-bottom:18px;
+  display:flex;align-items:center;gap:8px;
 }
-.back-link {
-  display: block;
-  text-align: center;
-  margin-top: 20px;
-  color: rgba(0,255,65,0.4);
-  text-decoration: none;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.2em;
-  transition: color 0.3s;
+.back{
+  display:block;margin-top:20px;
+  color:rgba(255,130,180,.4);font-size:.78rem;text-decoration:none;
+  transition:color .3s;letter-spacing:.1em;
 }
-.back-link:hover { color: #00ff41; }
+.back:hover{color:rgba(255,77,141,.8);}
 </style>
 </head>
 <body>
-<div class="login-card">
-  <div class="login-title">⚡ ADMIN ACCESS</div>
-  <div class="login-sub">RESTRICTED ZONE — AUTHORIZED PERSONNEL ONLY</div>
-  {% if error %}
-  <div class="error-msg">✗ {{ error }}</div>
-  {% endif %}
+<div class="card">
+  <span class="card-icon">🌸</span>
+  <h1>Admin Access</h1>
+  <div class="sub">~ her secret garden ~</div>
+  {% if error %}<div class="err"><i class="fas fa-times-circle"></i> {{ error }}</div>{% endif %}
   <form method="POST" action="/admin/login">
-    <div class="form-group">
-      <label>SECURITY PASSPHRASE</label>
-      <input type="password" name="password" placeholder="Enter password..." autofocus required>
+    <div class="inp-wrap">
+      <i class="fas fa-lock"></i>
+      <input type="password" name="password" placeholder="Enter the secret password..." autofocus required>
     </div>
-    <button type="submit" class="login-btn">AUTHENTICATE →</button>
+    <button type="submit" class="btn">✨ Enter Admin Panel</button>
   </form>
-  <a href="/" class="back-link">← RETURN TO MAIN</a>
+  <a href="/" class="back">← return to her world</a>
 </div>
 </body>
-</html>
-"""
+</html>"""
 
-ADMIN_DASHBOARD_TEMPLATE = """
-<!DOCTYPE html>
+# ══════════════════════════════════════════════
+#  ADMIN DASHBOARD
+# ══════════════════════════════════════════════
+ADMIN_DASH = """<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Dashboard | RUHI X QNR</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Admin Dashboard 🌸</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&family=Dancing+Script:wght@600&family=Poppins:wght@300;400;500;600&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-  min-height: 100vh;
-  background: #080010;
-  color: #fff;
-  font-family: 'Poppins', sans-serif;
-  background-image:
-    radial-gradient(ellipse at top left, rgba(255,110,180,0.08) 0%, transparent 60%),
-    radial-gradient(ellipse at bottom right, rgba(156,39,176,0.08) 0%, transparent 60%);
+:root{--pk:#ff4d8d;--pp:#b94fcc;--rd:#e8305a;--dark:#0d0015;--glass:rgba(255,255,255,.05);--border:rgba(255,130,180,.2);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  min-height:100vh;background:var(--dark);color:#fff;
+  font-family:'Poppins',sans-serif;
+  background-image:radial-gradient(ellipse at 10% 10%,rgba(185,79,204,.12),transparent 50%),
+                   radial-gradient(ellipse at 90% 90%,rgba(255,77,141,.1),transparent 50%);
 }
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:linear-gradient(var(--pk),var(--pp));border-radius:2px;}
 
 /* Topbar */
-.topbar {
-  background: rgba(255,255,255,0.04);
-  border-bottom: 1px solid rgba(255,110,180,0.2);
-  padding: 16px 30px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky; top: 0;
-  z-index: 100;
-  backdrop-filter: blur(10px);
+.top{
+  position:sticky;top:0;z-index:100;
+  background:rgba(13,0,21,.9);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  padding:14px 28px;display:flex;align-items:center;justify-content:space-between;
+  gap:12px;flex-wrap:wrap;
 }
-.topbar-brand {
-  font-family: 'Orbitron', monospace;
-  font-size: clamp(0.8rem, 2vw, 1rem);
-  font-weight: 700;
-  background: linear-gradient(135deg, #ff6eb4, #9c27b0);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: 0.2em;
+.top-brand{
+  font-family:'Dancing Script',cursive;font-size:1.4rem;
+  background:linear-gradient(135deg,#ff85b3,#d17fe8);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
-.topbar-actions { display: flex; gap: 12px; align-items: center; }
-.btn-sm {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-family: 'Orbitron', monospace;
-  font-size: 0.65rem;
-  letter-spacing: 0.15em;
-  cursor: pointer;
-  border: none;
-  transition: all 0.3s;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.top-btns{display:flex;gap:10px;flex-wrap:wrap;}
+.tbtn{
+  padding:8px 18px;border-radius:10px;font-size:.72rem;
+  font-family:'Montserrat',sans-serif;letter-spacing:.1em;font-weight:600;
+  cursor:pointer;border:none;text-decoration:none;
+  display:inline-flex;align-items:center;gap:6px;transition:all .3s;
 }
-.btn-primary {
-  background: linear-gradient(135deg, #ff6eb4, #9c27b0);
-  color: #fff;
-}
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255,110,180,0.4); }
-.btn-danger {
-  background: rgba(255,50,50,0.15);
-  border: 1px solid rgba(255,50,50,0.3);
-  color: #ff6666;
-}
-.btn-danger:hover { background: rgba(255,50,50,0.25); }
-.btn-ghost {
-  background: rgba(255,255,255,0.07);
-  border: 1px solid rgba(255,110,180,0.2);
-  color: #ff9ed2;
-}
-.btn-ghost:hover { background: rgba(255,110,180,0.15); border-color: rgba(255,110,180,0.4); }
-
-/* Main container */
-.main { padding: clamp(20px, 4vw, 40px); max-width: 1100px; margin: 0 auto; }
+.tbtn-view{background:rgba(255,255,255,.08);border:1px solid var(--border);color:rgba(255,180,210,.7);}
+.tbtn-view:hover{background:rgba(255,130,180,.15);border-color:rgba(255,77,141,.4);}
+.tbtn-out{background:rgba(255,50,80,.1);border:1px solid rgba(255,50,80,.2);color:#ff7090;}
+.tbtn-out:hover{background:rgba(255,50,80,.2);}
 
 /* Alert */
-.alert {
-  padding: 12px 20px;
-  border-radius: 8px;
-  margin-bottom: 24px;
-  font-size: 0.85rem;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.alert{
+  margin:20px;padding:14px 20px;border-radius:12px;
+  display:flex;align-items:center;gap:10px;font-size:.85rem;
 }
-.alert-success {
-  background: rgba(39,201,63,0.1);
-  border: 1px solid rgba(39,201,63,0.3);
-  color: #27c93f;
+.alert-ok{background:rgba(100,220,120,.08);border:1px solid rgba(100,220,120,.2);color:#7ddc9f;}
+.alert-err{background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.2);color:#ff8090;}
+
+/* Main */
+.main{padding:30px;max-width:1100px;margin:0 auto;}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:32px;}
+.stat{
+  background:var(--glass);border:1px solid var(--border);border-radius:16px;
+  padding:18px;text-align:center;
 }
-.alert-error {
-  background: rgba(255,80,80,0.1);
-  border: 1px solid rgba(255,80,80,0.3);
-  color: #ff5050;
+.stat-v{
+  font-family:'Playfair Display',serif;font-style:italic;
+  font-size:1.6rem;font-weight:700;
+  background:linear-gradient(135deg,#ff85b3,#d17fe8);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:4px;
 }
+.stat-l{font-size:.62rem;color:rgba(255,150,190,.4);letter-spacing:.15em;text-transform:uppercase;font-family:'Montserrat',sans-serif;font-weight:600;}
 
 /* Sections */
-.section { margin-bottom: 40px; }
-.section-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255,110,180,0.15);
+.sec{margin-bottom:32px;}
+.sec-hd{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:18px;padding-bottom:12px;
+  border-bottom:1px solid rgba(255,130,180,.1);
 }
-.section-title-admin {
-  font-family: 'Orbitron', monospace;
-  font-size: clamp(0.75rem, 2vw, 0.9rem);
-  letter-spacing: 0.2em;
-  color: #ff9ed2;
-}
-.section-icon { color: #ff6eb4; font-size: 1rem; }
+.sec-hd-icon{color:var(--pk);font-size:.95rem;}
+.sec-hd-title{font-family:'Montserrat',sans-serif;font-size:.78rem;font-weight:600;letter-spacing:.2em;color:rgba(255,150,190,.7);}
 
-/* Form grid */
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
-  gap: 20px;
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:16px;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.fg.full{grid-column:1/-1;}
+.fl{font-family:'Montserrat',sans-serif;font-size:.62rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,150,190,.45);}
+.fi,.fta{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,130,180,.15);
+  border-radius:10px;padding:11px 14px;color:#fff;
+  font-family:'Poppins',sans-serif;font-size:.85rem;outline:none;width:100%;
+  transition:all .3s;
 }
-.form-group-admin { display: flex; flex-direction: column; gap: 6px; }
-.form-label {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
-  color: rgba(255,182,193,0.6);
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-}
-.form-input, .form-textarea {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,110,180,0.2);
-  border-radius: 8px;
-  padding: 12px 16px;
-  color: #fff;
-  font-family: 'Poppins', sans-serif;
-  font-size: 0.85rem;
-  outline: none;
-  transition: all 0.3s;
-  width: 100%;
-}
-.form-input:focus, .form-textarea:focus {
-  border-color: rgba(255,110,180,0.6);
-  background: rgba(255,255,255,0.08);
-  box-shadow: 0 0 0 3px rgba(255,110,180,0.1);
-}
-.form-textarea { resize: vertical; min-height: 80px; }
-.form-input::placeholder, .form-textarea::placeholder { color: rgba(255,255,255,0.2); }
+.fi:focus,.fta:focus{border-color:rgba(255,77,141,.5);background:rgba(255,255,255,.07);box-shadow:0 0 0 3px rgba(255,77,141,.08);}
+.fi::placeholder,.fta::placeholder{color:rgba(255,150,190,.2);}
+.fta{resize:vertical;min-height:70px;}
 
-/* Media card */
-.media-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
-  gap: 16px;
+/* Media cards */
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:14px;}
+.mc{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,130,180,.12);
+  border-radius:14px;padding:16px;transition:border-color .3s;
 }
-.media-card {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,110,180,0.15);
-  border-radius: 12px;
-  padding: 16px;
-  transition: border-color 0.3s;
+.mc:hover{border-color:rgba(255,130,180,.3);}
+.mc-hd{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.mc-icon{
+  width:32px;height:32px;border-radius:9px;
+  background:linear-gradient(135deg,rgba(255,77,141,.2),rgba(185,79,204,.2));
+  display:flex;align-items:center;justify-content:center;font-size:.85rem;
 }
-.media-card:hover { border-color: rgba(255,110,180,0.35); }
-.media-card-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-.media-card-icon {
-  width: 32px; height: 32px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, rgba(255,110,180,0.2), rgba(156,39,176,0.2));
-  display: flex; align-items: center; justify-content: center;
-  color: #ff9ed2;
-  font-size: 0.8rem;
-}
-.media-card-title {
-  font-family: 'Orbitron', monospace;
-  font-size: 0.65rem;
-  color: #ff9ed2;
-  letter-spacing: 0.15em;
-}
-.media-hint {
-  font-size: 0.65rem;
-  color: rgba(255,255,255,0.25);
-  margin-top: 4px;
-  font-family: 'Share Tech Mono', monospace;
-}
+.mc-title{font-family:'Montserrat',sans-serif;font-size:.62rem;font-weight:600;letter-spacing:.15em;color:rgba(255,150,190,.5);}
+.mc-hint{font-size:.6rem;color:rgba(255,255,255,.18);margin-top:4px;font-family:'Poppins',sans-serif;}
 
-/* Submit button */
-.form-submit {
-  margin-top: 24px;
-  display: flex;
-  justify-content: flex-end;
+/* Submit */
+.fsub{margin-top:24px;display:flex;justify-content:flex-end;}
+.btn-save{
+  padding:14px 45px;border:none;border-radius:12px;
+  background:linear-gradient(135deg,var(--pk),var(--pp),var(--rd));
+  background-size:300%;animation:bsG 3s ease infinite;
+  color:#fff;font-family:'Poppins',sans-serif;font-size:.88rem;font-weight:600;
+  cursor:pointer;letter-spacing:.08em;
+  box-shadow:0 8px 30px rgba(255,77,141,.35);transition:transform .2s,box-shadow .2s;
+  display:flex;align-items:center;gap:8px;
 }
-.btn-save {
-  padding: 14px 40px;
-  background: linear-gradient(135deg, #ff6eb4, #9c27b0);
-  border: none;
-  border-radius: 8px;
-  color: #fff;
-  font-family: 'Orbitron', monospace;
-  font-size: 0.8rem;
-  letter-spacing: 0.2em;
-  cursor: pointer;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.btn-save:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255,110,180,0.4); }
+.btn-save:hover{transform:translateY(-3px);box-shadow:0 15px 40px rgba(255,77,141,.55);}
+@keyframes bsG{0%,100%{background-position:0%;}50%{background-position:100%;}}
 
-/* Password change */
-.password-section {
-  background: rgba(255,50,50,0.05);
-  border: 1px solid rgba(255,50,50,0.15);
-  border-radius: 12px;
-  padding: 24px;
+.pw-box{
+  background:rgba(255,50,80,.04);border:1px solid rgba(255,50,80,.12);
+  border-radius:16px;padding:24px;
 }
-
-/* Stats row */
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
-  gap: 16px;
-  margin-bottom: 30px;
+.btn-pw{
+  padding:11px 28px;border:none;border-radius:10px;
+  background:rgba(255,50,80,.15);border:1px solid rgba(255,50,80,.25);
+  color:#ff7090;font-family:'Poppins',sans-serif;font-size:.78rem;font-weight:600;
+  cursor:pointer;transition:all .3s;display:flex;align-items:center;gap:6px;
 }
-.stat-card {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,110,180,0.15);
-  border-radius: 12px;
-  padding: 16px;
-  text-align: center;
-}
-.stat-value {
-  font-family: 'Orbitron', monospace;
-  font-size: clamp(1rem, 3vw, 1.5rem);
-  font-weight: 700;
-  background: linear-gradient(135deg, #ff6eb4, #9c27b0);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 4px;
-}
-.stat-label {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.65rem;
-  color: rgba(255,182,193,0.5);
-  letter-spacing: 0.15em;
-}
-
-/* Full width group */
-.full-width { grid-column: 1 / -1; }
-
-/* Scrollbar */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
-::-webkit-scrollbar-thumb { background: rgba(255,110,180,0.3); border-radius: 2px; }
+.btn-pw:hover{background:rgba(255,50,80,.25);}
 </style>
 </head>
 <body>
 
-<!-- Topbar -->
-<div class="topbar">
-  <div class="topbar-brand">⚡ RUHI X QNR — ADMIN PANEL</div>
-  <div class="topbar-actions">
-    <a href="/" class="btn-sm btn-ghost" target="_blank"><i class="fas fa-eye"></i> VIEW SITE</a>
-    <a href="/admin/logout" class="btn-sm btn-danger"><i class="fas fa-sign-out-alt"></i> LOGOUT</a>
+<div class="top">
+  <div class="top-brand">🌸 Admin Panel</div>
+  <div class="top-btns">
+    <a href="/" target="_blank" class="tbtn tbtn-view"><i class="fas fa-eye"></i> View Site</a>
+    <a href="/admin/logout" class="tbtn tbtn-out"><i class="fas fa-sign-out-alt"></i> Logout</a>
   </div>
 </div>
 
+{% if msg %}
+<div class="alert {{ 'alert-ok' if ok else 'alert-err' }}">
+  <i class="fas fa-{{ 'check-circle' if ok else 'exclamation-circle' }}"></i> {{ msg }}
+</div>
+{% endif %}
+
 <div class="main">
-  <!-- Alert -->
-  {% if message %}
-  <div class="alert alert-{{ 'success' if success else 'error' }}">
-    <i class="fas fa-{{ 'check-circle' if success else 'exclamation-triangle' }}"></i>
-    {{ message }}
-  </div>
-  {% endif %}
 
   <!-- Stats -->
-  <div class="stats-row">
-    <div class="stat-card">
-      <div class="stat-value">{{ data.profile.name.split()[0] }}</div>
-      <div class="stat-label">IDENTITY</div>
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-v">{{ db.profile.name }}</div>
+      <div class="stat-l">Name</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-value">{{ data.media_map.values() | list | selectattr('__bool__') | list | length }}</div>
-      <div class="stat-label">MEDIA MAPPED</div>
+    <div class="stat">
+      <div class="stat-v">{{ db.media_map.values()|list|select|list|length }}</div>
+      <div class="stat-l">Media Mapped</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-value">{{ data.socials.values() | list | selectattr('__bool__') | list | length }}</div>
-      <div class="stat-label">SOCIAL LINKS</div>
+    <div class="stat">
+      <div class="stat-v">{{ db.socials.values()|list|select|list|length }}</div>
+      <div class="stat-l">Socials</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-value">8</div>
-      <div class="stat-label">BIO CARDS</div>
+    <div class="stat">
+      <div class="stat-v">{{ db.intro_lines|length }}</div>
+      <div class="stat-l">Intro Lines</div>
     </div>
   </div>
 
-  <!-- MAIN FORM -->
   <form method="POST" action="/admin/save">
 
-    <!-- Profile Section -->
-    <div class="section">
-      <div class="section-header">
-        <i class="fas fa-user section-icon"></i>
-        <div class="section-title-admin">PROFILE INFORMATION</div>
-      </div>
-      <div class="form-grid">
-        <div class="form-group-admin">
-          <label class="form-label">Display Name</label>
-          <input type="text" name="name" class="form-input" value="{{ data.profile.name }}" placeholder="RUHI X QNR" required>
-        </div>
-        <div class="form-group-admin">
-          <label class="form-label">Tagline</label>
-          <input type="text" name="tagline" class="form-input" value="{{ data.profile.tagline }}" placeholder="Digital Ghost | Aesthetic Soul">
-        </div>
-        <div class="form-group-admin full-width">
-          <label class="form-label">Bio / Description</label>
-          <textarea name="bio" class="form-textarea">{{ data.profile.bio }}</textarea>
-        </div>
-        <div class="form-group-admin full-width">
-          <label class="form-label">Avatar Image URL</label>
-          <input type="url" name="avatar" class="form-input" value="{{ data.profile.avatar }}" placeholder="https://...">
-        </div>
+    <!-- Profile -->
+    <div class="sec">
+      <div class="sec-hd"><i class="fas fa-user sec-hd-icon"></i><div class="sec-hd-title">Profile Info</div></div>
+      <div class="fgrid">
+        <div class="fg"><div class="fl">Main Name</div><input class="fi" type="text" name="name" value="{{ db.profile.name }}" required></div>
+        <div class="fg"><div class="fl">Subtitle (& QNR)</div><input class="fi" type="text" name="subtitle" value="{{ db.profile.subtitle }}"></div>
+        <div class="fg"><div class="fl">Tagline</div><input class="fi" type="text" name="tagline" value="{{ db.profile.tagline }}"></div>
+        <div class="fg"><div class="fl">Avatar URL</div><input class="fi" type="url" name="avatar" value="{{ db.profile.avatar }}" placeholder="https://..."></div>
+        <div class="fg full"><div class="fl">Bio</div><textarea class="fta" name="bio">{{ db.profile.bio }}</textarea></div>
       </div>
     </div>
 
-    <!-- Bio Details -->
-    <div class="section">
-      <div class="section-header">
-        <i class="fas fa-id-card section-icon"></i>
-        <div class="section-title-admin">BIO CARD DETAILS</div>
-      </div>
-      <div class="form-grid">
-        <div class="form-group-admin">
-          <label class="form-label"><i class="fas fa-star-of-life"></i> Age</label>
-          <input type="text" name="age" class="form-input" value="{{ data.profile.age }}" placeholder="19">
-        </div>
-        <div class="form-group-admin">
-          <label class="form-label"><i class="fas fa-birthday-cake"></i> Birthday</label>
-          <input type="text" name="birthday" class="form-input" value="{{ data.profile.birthday }}" placeholder="January 1st">
-        </div>
-        <div class="form-group-admin">
-          <label class="form-label"><i class="fas fa-map-pin"></i> Location</label>
-          <input type="text" name="location" class="form-input" value="{{ data.profile.location }}" placeholder="City, Country">
-        </div>
-        <div class="form-group-admin">
-          <label class="form-label"><i class="fas fa-moon"></i> Zodiac</label>
-          <input type="text" name="zodiac" class="form-input" value="{{ data.profile.zodiac }}" placeholder="Capricorn ♑">
-        </div>
-        <div class="form-group-admin">
-          <label class="form-label"><i class="fas fa-heart"></i> Hobbies</label>
-          <input type="text" name="hobbies" class="form-input" value="{{ data.profile.hobbies }}" placeholder="Hacking Hearts...">
-        </div>
-        <div class="form-group-admin">
-          <label class="form-label"><i class="fas fa-music"></i> Music Taste</label>
-          <input type="text" name="music" class="form-input" value="{{ data.profile.music }}" placeholder="Lo-fi & Dark Pop">
-        </div>
-        <div class="form-group-admin">
-          <label class="form-label"><i class="fas fa-magic"></i> My Vibe</label>
-          <input type="text" name="vibe" class="form-input" value="{{ data.profile.vibe }}" placeholder="Chaotic Soft Girl">
-        </div>
-        <div class="form-group-admin full-width">
-          <label class="form-label"><i class="fas fa-quote-left"></i> Personal Quote</label>
-          <input type="text" name="quote" class="form-input" value="{{ data.profile.quote }}" placeholder="Your iconic quote...">
-        </div>
+    <!-- Bio Cards -->
+    <div class="sec">
+      <div class="sec-hd"><i class="fas fa-id-card sec-hd-icon"></i><div class="sec-hd-title">Bio Card Values</div></div>
+      <div class="fgrid">
+        <div class="fg"><div class="fl">✨ Age</div><input class="fi" type="text" name="age" value="{{ db.profile.age }}"></div>
+        <div class="fg"><div class="fl">🎂 Birthday</div><input class="fi" type="text" name="birthday" value="{{ db.profile.birthday }}"></div>
+        <div class="fg"><div class="fl">🌍 Location</div><input class="fi" type="text" name="location" value="{{ db.profile.location }}"></div>
+        <div class="fg"><div class="fl">🌙 Zodiac</div><input class="fi" type="text" name="zodiac" value="{{ db.profile.zodiac }}"></div>
+        <div class="fg"><div class="fl">🎨 Hobbies</div><input class="fi" type="text" name="hobbies" value="{{ db.profile.hobbies }}"></div>
+        <div class="fg"><div class="fl">🎵 Music</div><input class="fi" type="text" name="music" value="{{ db.profile.music }}"></div>
+        <div class="fg"><div class="fl">🌸 Vibe</div><input class="fi" type="text" name="vibe" value="{{ db.profile.vibe }}"></div>
+        <div class="fg"><div class="fl">💗 Bestie</div><input class="fi" type="text" name="bestie" value="{{ db.profile.bestie }}"></div>
+        <div class="fg full"><div class="fl">🦋 Quote</div><input class="fi" type="text" name="quote" value="{{ db.profile.quote }}"></div>
       </div>
     </div>
 
-    <!-- Social Links -->
-    <div class="section">
-      <div class="section-header">
-        <i class="fas fa-share-alt section-icon"></i>
-        <div class="section-title-admin">SOCIAL MEDIA LINKS</div>
-      </div>
-      <div class="form-grid">
-        <div class="form-group-admin">
-          <label class="form-label"><i class="fab fa-instagram"></i> Instagram URL</label>
-          <input type="url" name="instagram" class="form-input" value="{{ data.socials.instagram }}" placeholder="https://instagram.com/...">
-        </div>
-        <div class="form-group-admin">
-          <label class="form-label"><i class="fab fa-twitter"></i> Twitter URL</label>
-          <input type="url" name="twitter" class="form-input" value="{{ data.socials.twitter }}" placeholder="https://twitter.com/...">
-        </div>
-        <div class="form-group-admin">
-          <label class="form-label"><i class="fab fa-tiktok"></i> TikTok URL</label>
-          <input type="url" name="tiktok" class="form-input" value="{{ data.socials.tiktok }}" placeholder="https://tiktok.com/@...">
-        </div>
-        <div class="form-group-admin">
-          <label class="form-label"><i class="fab fa-youtube"></i> YouTube URL</label>
-          <input type="url" name="youtube" class="form-input" value="{{ data.socials.youtube }}" placeholder="https://youtube.com/...">
-        </div>
-        <div class="form-group-admin">
-          <label class="form-label"><i class="fab fa-spotify"></i> Spotify URL</label>
-          <input type="url" name="spotify" class="form-input" value="{{ data.socials.spotify }}" placeholder="https://spotify.com/...">
-        </div>
-        <div class="form-group-admin">
-          <label class="form-label"><i class="fas fa-music"></i> Background Music URL</label>
-          <input type="url" name="background_music" class="form-input" value="{{ data.background_music }}" placeholder="https://...mp3">
-        </div>
+    <!-- Socials -->
+    <div class="sec">
+      <div class="sec-hd"><i class="fas fa-share-alt sec-hd-icon"></i><div class="sec-hd-title">Social Links</div></div>
+      <div class="fgrid">
+        <div class="fg"><div class="fl"><i class="fab fa-instagram"></i> Instagram</div><input class="fi" type="url" name="instagram" value="{{ db.socials.instagram }}" placeholder="https://..."></div>
+        <div class="fg"><div class="fl"><i class="fab fa-twitter"></i> Twitter</div><input class="fi" type="url" name="twitter" value="{{ db.socials.twitter }}" placeholder="https://..."></div>
+        <div class="fg"><div class="fl"><i class="fab fa-tiktok"></i> TikTok</div><input class="fi" type="url" name="tiktok" value="{{ db.socials.tiktok }}" placeholder="https://..."></div>
+        <div class="fg"><div class="fl"><i class="fab fa-youtube"></i> YouTube</div><input class="fi" type="url" name="youtube" value="{{ db.socials.youtube }}" placeholder="https://..."></div>
+        <div class="fg"><div class="fl"><i class="fab fa-snapchat"></i> Snapchat</div><input class="fi" type="url" name="snapchat" value="{{ db.socials.snapchat }}" placeholder="https://..."></div>
       </div>
     </div>
 
-    <!-- Terminal Lines -->
-    <div class="section">
-      <div class="section-header">
-        <i class="fas fa-terminal section-icon"></i>
-        <div class="section-title-admin">TERMINAL INTRO LINES</div>
-      </div>
-      <div class="form-group-admin">
-        <label class="form-label">Terminal Lines (one per line)</label>
-        <textarea name="terminal_lines" class="form-textarea" style="min-height:180px; font-family:'Share Tech Mono',monospace; font-size:0.8rem;">{{ data.terminal_lines | join('\n') }}</textarea>
-        <div class="media-hint">Each line will be typed one by one in the terminal sequence.</div>
+    <!-- Media -->
+    <div class="sec">
+      <div class="sec-hd"><i class="fas fa-film sec-hd-icon"></i><div class="sec-hd-title">Background Video & Music</div></div>
+      <div class="fgrid">
+        <div class="fg full"><div class="fl">🎬 Background Video URL (MP4 / direct link — plays behind everything)</div><input class="fi" type="url" name="background_video" value="{{ db.background_video }}" placeholder="https://...mp4"></div>
+        <div class="fg full"><div class="fl">🎵 Background Music URL (MP3)</div><input class="fi" type="url" name="background_music" value="{{ db.background_music }}" placeholder="https://...mp3"></div>
       </div>
     </div>
 
-    <!-- Media Mapping -->
-    <div class="section">
-      <div class="section-header">
-        <i class="fas fa-play-circle section-icon"></i>
-        <div class="section-title-admin">MEDIA URL MAPPING — BIO CARDS</div>
-      </div>
-      <p style="font-size:0.8rem; color:rgba(255,182,193,0.5); margin-bottom:20px; font-family:'Share Tech Mono',monospace;">
-        ♡ Assign an audio (MP3) or video (MP4/YouTube) URL to each bio card. When clicked, it will play automatically.
-      </p>
-      <div class="media-grid">
-        <div class="media-card">
-          <div class="media-card-header">
-            <div class="media-card-icon"><i class="fas fa-star-of-life"></i></div>
-            <div class="media-card-title">AGE CARD</div>
-          </div>
-          <input type="url" name="media_age" class="form-input" value="{{ data.media_map.age }}" placeholder="https://...mp3 or mp4">
-          <div class="media-hint">Supports: MP3, MP4, YouTube URL</div>
-        </div>
-        <div class="media-card">
-          <div class="media-card-header">
-            <div class="media-card-icon"><i class="fas fa-birthday-cake"></i></div>
-            <div class="media-card-title">BIRTHDAY CARD</div>
-          </div>
-          <input type="url" name="media_birthday" class="form-input" value="{{ data.media_map.birthday }}" placeholder="https://...mp3 or mp4">
-          <div class="media-hint">Supports: MP3, MP4, YouTube URL</div>
-        </div>
-        <div class="media-card">
-          <div class="media-card-header">
-            <div class="media-card-icon"><i class="fas fa-map-pin"></i></div>
-            <div class="media-card-title">LOCATION CARD</div>
-          </div>
-          <input type="url" name="media_location" class="form-input" value="{{ data.media_map.location }}" placeholder="https://...mp3 or mp4">
-          <div class="media-hint">Supports: MP3, MP4, YouTube URL</div>
-        </div>
-        <div class="media-card">
-          <div class="media-card-header">
-            <div class="media-card-icon"><i class="fas fa-moon"></i></div>
-            <div class="media-card-title">ZODIAC CARD</div>
-          </div>
-          <input type="url" name="media_zodiac" class="form-input" value="{{ data.media_map.zodiac }}" placeholder="https://...mp3 or mp4">
-          <div class="media-hint">Supports: MP3, MP4, YouTube URL</div>
-        </div>
-        <div class="media-card">
-          <div class="media-card-header">
-            <div class="media-card-icon"><i class="fas fa-heart"></i></div>
-            <div class="media-card-title">HOBBIES CARD</div>
-          </div>
-          <input type="url" name="media_hobbies" class="form-input" value="{{ data.media_map.hobbies }}" placeholder="https://...mp3 or mp4">
-          <div class="media-hint">Supports: MP3, MP4, YouTube URL</div>
-        </div>
-        <div class="media-card">
-          <div class="media-card-header">
-            <div class="media-card-icon"><i class="fas fa-music"></i></div>
-            <div class="media-card-title">MUSIC CARD</div>
-          </div>
-          <input type="url" name="media_music" class="form-input" value="{{ data.media_map.music }}" placeholder="https://...mp3 or mp4">
-          <div class="media-hint">Supports: MP3, MP4, YouTube URL</div>
-        </div>
-        <div class="media-card">
-          <div class="media-card-header">
-            <div class="media-card-icon"><i class="fas fa-magic"></i></div>
-            <div class="media-card-title">VIBE CARD</div>
-          </div>
-          <input type="url" name="media_vibe" class="form-input" value="{{ data.media_map.vibe }}" placeholder="https://...mp3 or mp4">
-          <div class="media-hint">Supports: MP3, MP4, YouTube URL</div>
-        </div>
-        <div class="media-card">
-          <div class="media-card-header">
-            <div class="media-card-icon"><i class="fas fa-quote-left"></i></div>
-            <div class="media-card-title">QUOTE CARD</div>
-          </div>
-          <input type="url" name="media_quote" class="form-input" value="{{ data.media_map.quote }}" placeholder="https://...mp3 or mp4">
-          <div class="media-hint">Supports: MP3, MP4, YouTube URL</div>
-        </div>
+    <!-- Intro Lines -->
+    <div class="sec">
+      <div class="sec-hd"><i class="fas fa-feather sec-hd-icon"></i><div class="sec-hd-title">Intro Typing Lines</div></div>
+      <div class="fg">
+        <div class="fl">One line per row (shown during intro screen)</div>
+        <textarea class="fta" name="intro_lines" style="min-height:150px;font-size:.8rem;">{{ db.intro_lines | join('\n') }}</textarea>
       </div>
     </div>
 
-    <!-- Submit -->
-    <div class="form-submit">
-      <button type="submit" name="action" value="save_profile" class="btn-save">
-        <i class="fas fa-save"></i> SAVE ALL CHANGES
-      </button>
+    <!-- Card Media -->
+    <div class="sec">
+      <div class="sec-hd"><i class="fas fa-play-circle sec-hd-icon"></i><div class="sec-hd-title">Card Media URLs</div></div>
+      <p style="font-size:.75rem;color:rgba(255,150,190,.4);margin-bottom:16px;font-family:'Poppins',sans-serif;">Assign MP3 / MP4 / YouTube URL to each card. Plays when tapped. 💕</p>
+      <div class="mgrid">
+        <div class="mc"><div class="mc-hd"><div class="mc-icon">✨</div><div class="mc-title">Age Card</div></div><input class="fi" type="url" name="media_age" value="{{ db.media_map.age }}" placeholder="https://..."><div class="mc-hint">MP3 · MP4 · YouTube</div></div>
+        <div class="mc"><div class="mc-hd"><div class="mc-icon">🎂</div><div class="mc-title">Birthday Card</div></div><input class="fi" type="url" name="media_birthday" value="{{ db.media_map.birthday }}" placeholder="https://..."><div class="mc-hint">MP3 · MP4 · YouTube</div></div>
+        <div class="mc"><div class="mc-hd"><div class="mc-icon">🌍</div><div class="mc-title">Location Card</div></div><input class="fi" type="url" name="media_location" value="{{ db.media_map.location }}" placeholder="https://..."><div class="mc-hint">MP3 · MP4 · YouTube</div></div>
+        <div class="mc"><div class="mc-hd"><div class="mc-icon">🌙</div><div class="mc-title">Zodiac Card</div></div><input class="fi" type="url" name="media_zodiac" value="{{ db.media_map.zodiac }}" placeholder="https://..."><div class="mc-hint">MP3 · MP4 · YouTube</div></div>
+        <div class="mc"><div class="mc-hd"><div class="mc-icon">🎨</div><div class="mc-title">Hobbies Card</div></div><input class="fi" type="url" name="media_hobbies" value="{{ db.media_map.hobbies }}" placeholder="https://..."><div class="mc-hint">MP3 · MP4 · YouTube</div></div>
+        <div class="mc"><div class="mc-hd"><div class="mc-icon">🎵</div><div class="mc-title">Music Card</div></div><input class="fi" type="url" name="media_music" value="{{ db.media_map.music }}" placeholder="https://..."><div class="mc-hint">MP3 · MP4 · YouTube</div></div>
+        <div class="mc"><div class="mc-hd"><div class="mc-icon">🌸</div><div class="mc-title">Vibe Card</div></div><input class="fi" type="url" name="media_vibe" value="{{ db.media_map.vibe }}" placeholder="https://..."><div class="mc-hint">MP3 · MP4 · YouTube</div></div>
+        <div class="mc"><div class="mc-hd"><div class="mc-icon">💗</div><div class="mc-title">Bestie Card</div></div><input class="fi" type="url" name="media_bestie" value="{{ db.media_map.bestie }}" placeholder="https://..."><div class="mc-hint">MP3 · MP4 · YouTube</div></div>
+        <div class="mc"><div class="mc-hd"><div class="mc-icon">🦋</div><div class="mc-title">Quote Card</div></div><input class="fi" type="url" name="media_quote" value="{{ db.media_map.quote }}" placeholder="https://..."><div class="mc-hint">MP3 · MP4 · YouTube</div></div>
+      </div>
+    </div>
+
+    <div class="fsub">
+      <button type="submit" class="btn-save"><i class="fas fa-save"></i> Save All Changes</button>
     </div>
   </form>
 
-  <!-- Password Change -->
-  <div class="section" style="margin-top:20px;">
-    <div class="section-header">
-      <i class="fas fa-lock section-icon"></i>
-      <div class="section-title-admin">CHANGE ADMIN PASSWORD</div>
-    </div>
-    <div class="password-section">
+  <!-- Password -->
+  <div class="sec" style="margin-top:24px;">
+    <div class="sec-hd"><i class="fas fa-lock sec-hd-icon"></i><div class="sec-hd-title">Change Password</div></div>
+    <div class="pw-box">
       <form method="POST" action="/admin/change-password">
-        <div class="form-grid">
-          <div class="form-group-admin">
-            <label class="form-label">Current Password</label>
-            <input type="password" name="current_password" class="form-input" placeholder="Current password..." required>
-          </div>
-          <div class="form-group-admin">
-            <label class="form-label">New Password</label>
-            <input type="password" name="new_password" class="form-input" placeholder="New password (min 6 chars)..." required minlength="6">
-          </div>
-          <div class="form-group-admin">
-            <label class="form-label">Confirm New Password</label>
-            <input type="password" name="confirm_password" class="form-input" placeholder="Confirm new password..." required>
-          </div>
+        <div class="fgrid">
+          <div class="fg"><div class="fl">Current Password</div><input class="fi" type="password" name="current_password" placeholder="Current..." required></div>
+          <div class="fg"><div class="fl">New Password</div><input class="fi" type="password" name="new_password" placeholder="New (min 6)..." required minlength="6"></div>
+          <div class="fg"><div class="fl">Confirm New</div><input class="fi" type="password" name="confirm_password" placeholder="Confirm..." required></div>
         </div>
-        <div class="form-submit" style="margin-top:16px;">
-          <button type="submit" class="btn-sm btn-danger" style="padding:12px 30px; font-size:0.75rem;">
-            <i class="fas fa-key"></i> UPDATE PASSWORD
-          </button>
+        <div class="fsub" style="margin-top:16px;">
+          <button type="submit" class="btn-pw"><i class="fas fa-key"></i> Update Password</button>
         </div>
       </form>
     </div>
@@ -2344,190 +1711,116 @@ body {
 
 </div>
 </body>
-</html>
-"""
+</html>"""
 
-# ============================================================
-# ROUTES
-# ============================================================
-
+# ══════════════════════════════════════════════
+#  ROUTES
+# ══════════════════════════════════════════════
 @app.route('/')
 def index():
     db = load_db()
-    return render_template_string(
-        MAIN_TEMPLATE,
-        profile=db['profile'],
+    return render_template_string(MAIN,
+        p=db['profile'],
         socials=db['socials'],
-        background_music=db['background_music'],
+        bg_video=db.get('background_video',''),
+        bg_music=db.get('background_music',''),
         media_map=db['media_map'],
-        terminal_lines=db['terminal_lines']
+        intro_lines=db['intro_lines']
     )
 
 @app.route('/admin')
 @login_required
-def admin_dashboard():
-    return render_template_string(
-        ADMIN_DASHBOARD_TEMPLATE,
-        data=load_db(),
-        message=None,
-        success=False
-    )
+def admin():
+    return render_template_string(ADMIN_DASH, db=load_db(), msg=None, ok=False)
 
-@app.route('/admin/login', methods=['GET', 'POST'])
+@app.route('/admin/login', methods=['GET','POST'])
 def admin_login():
-    if session.get('admin_logged_in'):
-        return redirect(url_for('admin_dashboard'))
-
-    if request.method == 'POST':
-        password = request.form.get('password', '')
+    if session.get('admin'): return redirect('/admin')
+    if request.method=='POST':
+        pw = request.form.get('password','')
         db = load_db()
-        hashed = hashlib.sha256(password.encode()).hexdigest()
-
-        if hashed == db['password']:
-            session['admin_logged_in'] = True
-            session.permanent = True
-            return redirect(url_for('admin_dashboard'))
-        else:
-            return render_template_string(ADMIN_LOGIN_TEMPLATE, error='Invalid password. Access denied.')
-
-    return render_template_string(ADMIN_LOGIN_TEMPLATE, error=None)
+        if hashlib.sha256(pw.encode()).hexdigest() == db['password']:
+            session['admin'] = True
+            return redirect('/admin')
+        return render_template_string(ADMIN_LOGIN, error='Wrong password, darling 💔')
+    return render_template_string(ADMIN_LOGIN, error=None)
 
 @app.route('/admin/logout')
 def admin_logout():
-    session.clear()
-    return redirect(url_for('admin_login'))
+    session.clear(); return redirect('/admin/login')
 
 @app.route('/admin/save', methods=['POST'])
 @login_required
 def admin_save():
     db = load_db()
-
+    f = request.form
     try:
-        # Update profile
-        db['profile']['name'] = request.form.get('name', db['profile']['name']).strip()
-        db['profile']['tagline'] = request.form.get('tagline', db['profile']['tagline']).strip()
-        db['profile']['bio'] = request.form.get('bio', db['profile']['bio']).strip()
-        db['profile']['avatar'] = request.form.get('avatar', db['profile']['avatar']).strip()
-        db['profile']['age'] = request.form.get('age', db['profile']['age']).strip()
-        db['profile']['birthday'] = request.form.get('birthday', db['profile']['birthday']).strip()
-        db['profile']['location'] = request.form.get('location', db['profile']['location']).strip()
-        db['profile']['zodiac'] = request.form.get('zodiac', db['profile']['zodiac']).strip()
-        db['profile']['hobbies'] = request.form.get('hobbies', db['profile']['hobbies']).strip()
-        db['profile']['music'] = request.form.get('music', db['profile']['music']).strip()
-        db['profile']['vibe'] = request.form.get('vibe', db['profile']['vibe']).strip()
-        db['profile']['quote'] = request.form.get('quote', db['profile']['quote']).strip()
-
-        # Update socials
-        db['socials']['instagram'] = request.form.get('instagram', '').strip()
-        db['socials']['twitter'] = request.form.get('twitter', '').strip()
-        db['socials']['tiktok'] = request.form.get('tiktok', '').strip()
-        db['socials']['youtube'] = request.form.get('youtube', '').strip()
-        db['socials']['spotify'] = request.form.get('spotify', '').strip()
-        db['background_music'] = request.form.get('background_music', db['background_music']).strip()
-
-        # Update terminal lines
-        terminal_text = request.form.get('terminal_lines', '')
-        if terminal_text.strip():
-            lines = [l.strip() for l in terminal_text.split('\n') if l.strip()]
-            if lines:
-                db['terminal_lines'] = lines
-
-        # Update media map
-        db['media_map']['age'] = request.form.get('media_age', '').strip()
-        db['media_map']['birthday'] = request.form.get('media_birthday', '').strip()
-        db['media_map']['location'] = request.form.get('media_location', '').strip()
-        db['media_map']['zodiac'] = request.form.get('media_zodiac', '').strip()
-        db['media_map']['hobbies'] = request.form.get('media_hobbies', '').strip()
-        db['media_map']['music'] = request.form.get('media_music', '').strip()
-        db['media_map']['vibe'] = request.form.get('media_vibe', '').strip()
-        db['media_map']['quote'] = request.form.get('media_quote', '').strip()
-
+        db['profile'].update({
+            'name': f.get('name','').strip(),
+            'subtitle': f.get('subtitle','').strip(),
+            'tagline': f.get('tagline','').strip(),
+            'bio': f.get('bio','').strip(),
+            'avatar': f.get('avatar','').strip(),
+            'age': f.get('age','').strip(),
+            'birthday': f.get('birthday','').strip(),
+            'location': f.get('location','').strip(),
+            'zodiac': f.get('zodiac','').strip(),
+            'hobbies': f.get('hobbies','').strip(),
+            'music': f.get('music','').strip(),
+            'vibe': f.get('vibe','').strip(),
+            'bestie': f.get('bestie','').strip(),
+            'quote': f.get('quote','').strip(),
+        })
+        db['socials'].update({
+            'instagram': f.get('instagram','').strip(),
+            'twitter': f.get('twitter','').strip(),
+            'tiktok': f.get('tiktok','').strip(),
+            'youtube': f.get('youtube','').strip(),
+            'snapchat': f.get('snapchat','').strip(),
+        })
+        db['background_video'] = f.get('background_video','').strip()
+        db['background_music'] = f.get('background_music','').strip()
+        lines = [l.strip() for l in f.get('intro_lines','').split('\n') if l.strip()]
+        if lines: db['intro_lines'] = lines
+        db['media_map'].update({
+            'age': f.get('media_age','').strip(),
+            'birthday': f.get('media_birthday','').strip(),
+            'location': f.get('media_location','').strip(),
+            'zodiac': f.get('media_zodiac','').strip(),
+            'hobbies': f.get('media_hobbies','').strip(),
+            'music': f.get('media_music','').strip(),
+            'vibe': f.get('media_vibe','').strip(),
+            'bestie': f.get('media_bestie','').strip(),
+            'quote': f.get('media_quote','').strip(),
+        })
         save_db(db)
-
-        return render_template_string(
-            ADMIN_DASHBOARD_TEMPLATE,
-            data=db,
-            message='✓ All changes saved successfully! Your bio page has been updated.',
-            success=True
-        )
+        return render_template_string(ADMIN_DASH, db=db, msg='✓ Saved successfully! 💕', ok=True)
     except Exception as e:
-        return render_template_string(
-            ADMIN_DASHBOARD_TEMPLATE,
-            data=db,
-            message=f'Error saving data: {str(e)}',
-            success=False
-        )
+        return render_template_string(ADMIN_DASH, db=db, msg=f'Error: {e}', ok=False)
 
 @app.route('/admin/change-password', methods=['POST'])
 @login_required
-def admin_change_password():
+def admin_change_pw():
     db = load_db()
-
-    current = request.form.get('current_password', '')
-    new_pass = request.form.get('new_password', '')
-    confirm = request.form.get('confirm_password', '')
-
-    current_hash = hashlib.sha256(current.encode()).hexdigest()
-
-    if current_hash != db['password']:
-        return render_template_string(
-            ADMIN_DASHBOARD_TEMPLATE,
-            data=db,
-            message='✗ Current password is incorrect.',
-            success=False
-        )
-
-    if new_pass != confirm:
-        return render_template_string(
-            ADMIN_DASHBOARD_TEMPLATE,
-            data=db,
-            message='✗ New passwords do not match.',
-            success=False
-        )
-
-    if len(new_pass) < 6:
-        return render_template_string(
-            ADMIN_DASHBOARD_TEMPLATE,
-            data=db,
-            message='✗ Password must be at least 6 characters.',
-            success=False
-        )
-
-    db['password'] = hashlib.sha256(new_pass.encode()).hexdigest()
+    cur = request.form.get('current_password','')
+    new = request.form.get('new_password','')
+    con = request.form.get('confirm_password','')
+    if hashlib.sha256(cur.encode()).hexdigest() != db['password']:
+        return render_template_string(ADMIN_DASH, db=db, msg='Current password is wrong 💔', ok=False)
+    if new != con:
+        return render_template_string(ADMIN_DASH, db=db, msg="Passwords don't match 💔", ok=False)
+    if len(new) < 6:
+        return render_template_string(ADMIN_DASH, db=db, msg='Password too short (min 6) 💔', ok=False)
+    db['password'] = hashlib.sha256(new.encode()).hexdigest()
     save_db(db)
+    return render_template_string(ADMIN_DASH, db=db, msg='Password updated! 🌸', ok=True)
 
-    return render_template_string(
-        ADMIN_DASHBOARD_TEMPLATE,
-        data=db,
-        message='✓ Password updated successfully! Please use your new password next time.',
-        success=True
-    )
-
-@app.route('/api/db')
-@login_required
-def api_get_db():
-    """API endpoint to get current DB state (excluding password)"""
-    db = load_db()
-    safe_db = {k: v for k, v in db.items() if k != 'password'}
-    return jsonify(safe_db)
-
-# ============================================================
-# ENTRY POINT
-# ============================================================
 if __name__ == '__main__':
-    # Initialize DB on first run
     if not os.path.exists(DB_FILE):
         save_db(DEFAULT_DB)
-        print("✓ Database initialized with defaults")
-        print("✓ Default admin password: admin123")
-        print("✓ Change it immediately at /admin")
-
-    print("\n" + "="*50)
-    print("  RUHI X QNR — BIO WEBSITE")
-    print("="*50)
-    print(f"  Main Site  : http://localhost:5000/")
-    print(f"  Admin Panel: http://localhost:5000/admin")
-    print(f"  Default PW : admin123")
-    print("="*50 + "\n")
-
+        print("✓ DB created | password: admin123")
+    print("\n🌸 RUHI X QNR — GIRLY BIO WEBSITE")
+    print("   Site  → http://localhost:5000/")
+    print("   Admin → http://localhost:5000/admin")
+    print("   Pass  → admin123\n")
     app.run(debug=True, host='0.0.0.0', port=5000)
