@@ -225,27 +225,18 @@ class DatabaseRouter:
         self._writer_lock = threading.Lock()
 
     # ── MASTER INIT ──────────────────────────────────────────────────────────
-    def initialize_master(self):
-        engine = pool_manager.get_master_engine()
-        Base.metadata.create_all(bind=engine)
-        session = pool_manager.get_master_session()
-        try:
-            self._seed_owner(session)
-            self._seed_config(session)
-            self._seed_ui(session)
-            session.commit()
-            logger.info("✅ Master DB initialized")
-        except Exception as e:
-            session.rollback()
-            logger.error(f"Init error: {e}")
-        finally:
-            session.close()
-
-    def _seed_owner(self, session: Session):
-        existing = session.query(UserAccount).filter_by(
-            username="RUHIVIGQNR@QNR"
-        ).first()
-        if not existing:
+        def _seed_owner(self, session: Session):
+        # Purane account ko dhundo
+        owner = session.query(UserAccount).filter_by(username="RUHIVIGQNR@QNR").first()
+        
+        if owner:
+            # Agar account hai, toh password reset kar do (safety ke liye)
+            owner.password_hash = pwd_context.hash("RUHIVIGQNR")
+            owner.is_active = True
+            owner.role = "owner"
+            logger.info("✅ Owner account password updated")
+        else:
+            # Agar nahi hai, toh naya banao
             session.add(UserAccount(
                 username="RUHIVIGQNR@QNR",
                 email="owner@ruhivigqnr.com",
@@ -254,7 +245,7 @@ class DatabaseRouter:
                 is_active=True,
                 created_by="SYSTEM"
             ))
-            logger.info("✅ Owner account created")
+            logger.info("✅ Owner account created for the first time")
 
     def _seed_config(self, session: Session):
         defaults = [
